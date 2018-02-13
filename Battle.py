@@ -16,7 +16,7 @@ class Battle:
       temp = Pokemon.Pokemon(team[i])
       self.red.append(temp)
     
-    print(self.red)
+    # print(self.red[0].stats)
     
   def setBlue(self, team):
     # Number of Pokemon in the team
@@ -27,4 +27,4 @@ class Battle:
       temp = Pokemon.Pokemon(team[i])
       self.blue.append(temp)
     
-    print(self.blue)
+    # print(self.blue)
