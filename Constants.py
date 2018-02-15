@@ -7,7 +7,13 @@ statIncrement = np.array([100, 150, 200, 250, 300, 350, 400])
 
 # Pokemon
 
-# base stats
+# names
+PN = ['0',
+  'Bulbasaur', '2', '3',
+  'Charmander', '5', '6',
+  'Squirtle', '8', '9']
+
+# base stats [0: hp, 1: attack, 2: defense, 3: special, 4: speed]
 PBS = np.array([[0, 0, 0, 0, 0],
   [45, 49, 49, 65, 45], # bulbasaur
   [0, 0, 0, 0, 0],
@@ -19,7 +25,7 @@ PBS = np.array([[0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0]])
 
-# moves
+# moves [0: move 1, 1: move 2, 2: move 3, 3: move 4]
 PM = np.array([[0, 0, 0, 0],
   [1, 3, 0, 0], # bulbasaur
   [0, 0, 0, 0],
@@ -33,19 +39,26 @@ PM = np.array([[0, 0, 0, 0],
 
 # Moves
 
-# stats
-MS = np.array([[0, 0, 0],
-  [40, 100, 35], # scratch
-  [35, 95, 35], # tackle
-  [0, 100, 40], # growl
-  [0, 100, 35]]) # tail whip
+# names
+MN = ['0',
+  'Scratch',
+  'Tackle',
+  'Growl',
+  'Tail Whip']
 
-# modifiers
-MM = np.array([[0, 0, 0, 0],
-  [0, 0, 0, 0], # scratch
-  [0, 0, 0, 0], # tackle
-  [-1, 0, 0, 0], # growl
-  [0, -1, 0, 0]]) # tail whip
+# stats [0: power, 1: accuracy, 2: pp]
+MS = np.array([[0, 0, 0],
+  [40, 255, 35], # scratch
+  [35, 242, 35], # tackle
+  [0, 255, 40], # growl
+  [0, 255, 35]]) # tail whip
+
+# modifiers [0: chance, 1: attack, 2: defense, 3: special, 4: speed]
+MM = np.array([[0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0], # scratch
+  [0, 0, 0, 0, 0], # tackle
+  [256, -1, 0, 0, 0], # growl
+  [256, 0, -1, 0, 0]]) # tail whip
 
 # scenario 1 specific
 

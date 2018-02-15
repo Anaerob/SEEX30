@@ -1,12 +1,13 @@
+import numpy as np
+
 import Battle
 import Constants as c
 
 battle = Battle.Battle()
 
-if not battle.setRed(c.t1):
-  exit("Red team wrong size")
-
-if not battle.setBlue(c.t2):
-  exit("Blue team wrong size")
+battle.printSelf()
 
 # while not battle.over:
+battle.blue.nextMove = 0
+battle.red.nextMove = 0
+battle.progress()
