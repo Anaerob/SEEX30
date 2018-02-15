@@ -3,7 +3,10 @@ import Constants as c
 
 battle = Battle.Battle()
 
-battle.setRed(c.t1)
-battle.setBlue(c.t2)
+if not battle.setRed(c.t1):
+  exit("Red team wrong size")
 
-#print(c.testArray[0,1])
+if not battle.setBlue(c.t2):
+  exit("Blue team wrong size")
+
+# while not battle.over:
