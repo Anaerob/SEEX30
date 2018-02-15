@@ -27,10 +27,16 @@ class Battle:
     
     if blueFirst:
       self.useBlueMove()
-      self.useRedMove()
+      if self.red.pokemon[self.red.currentPokemon].activeStats[0] > 0:
+        self.useRedMove()
+      else:
+        self.over = True
     else:
       self.useRedMove()
-      self.useBlueMove()
+      if self.blue.pokemon[self.blue.currentPokemon].activeStats[0] > 0:
+        self.useBlueMove()
+      else:
+        self.over = True
   
   def useBlueMove(self):
     if np.random.randint(0, 256) >= self.blue.pokemon[self.blue.currentPokemon].moves[self.blue.nextMove].stats[1]:
@@ -48,10 +54,6 @@ class Battle:
     if np.random.randint(0, 256) >= self.red.pokemon[self.red.currentPokemon].moves[self.red.nextMove].stats[1]:
       print('Red move missed!')
     else:
-      print(self.red.pokemon[self.red.currentPokemon].level)
-      print(self.red.pokemon[self.red.currentPokemon].stats[1])
-      print(self.red.pokemon[self.red.currentPokemon].moves[self.red.nextMove].stats[0])
-      print(self.blue.pokemon[self.blue.currentPokemon].stats[2])
       damage = self.calculateDamage(
         self.red.pokemon[self.red.currentPokemon].level,
         self.red.pokemon[self.red.currentPokemon].stats[1],
@@ -71,6 +73,9 @@ class Battle:
     return damage
   
   def printSelf(self):
+    print()
     self.blue.printSelf()
+    print()
     self.red.printSelf()
+    print()
 #

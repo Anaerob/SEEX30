@@ -27,13 +27,13 @@ PBS = np.array([[0, 0, 0, 0, 0],
 
 # moves [0: move 1, 1: move 2, 2: move 3, 3: move 4]
 PM = np.array([[0, 0, 0, 0],
-  [1, 3, 0, 0], # bulbasaur
+  [2, 3, 0, 0], # bulbasaur
   [0, 0, 0, 0],
   [0, 0, 0, 0],
-  [2, 3, 0, 0], # charmander
+  [1, 3, 0, 0], # charmander
   [0, 0, 0, 0],
   [0, 0, 0, 0],
-  [1, 4, 0, 0], # squirtle
+  [2, 4, 0, 0], # squirtle
   [0, 0, 0, 0],
   [0, 0, 0, 0]])
 

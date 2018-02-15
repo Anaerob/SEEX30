@@ -6,7 +6,7 @@ class Move:
   def __init__(self, index):
     self.name = c.MN[index]
     self.stats = c.MS[index, :]
-    self.activeStats = self.stats
+    self.activeStats = self.stats.copy()
     self.modifier = c.MM[index, :]
   
   def printSelf(self):

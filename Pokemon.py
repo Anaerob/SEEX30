@@ -10,7 +10,8 @@ class Pokemon:
     self.name = c.PN[self.index]
     
     self.initializeStats()
-    self.activeStats = self.stats
+    # self.activeStats = self.stats
+    self.activeStats = self.stats.copy()
     
     self.numberofMoves = 0
     self.moves = []
