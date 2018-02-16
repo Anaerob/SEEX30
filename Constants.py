@@ -4,6 +4,7 @@ testArray = np.array([[0, 1], [10, 11]])
 
 statReduction = np.array([100, 66, 50, 40, 33, 28, 25])
 statIncrement = np.array([100, 150, 200, 250, 300, 350, 400])
+statModifiers = np.array([25, 28, 33, 40, 50, 66, 100, 150, 200, 250, 300, 350, 400]) # [6] = 100
 
 # Pokemon
 
@@ -40,26 +41,32 @@ PM = np.array([[0, 0, 0, 0],
 # Moves
 
 # names
-MN = ['0',
+MN = ['Struggle',
   'Scratch',
   'Tackle',
   'Growl',
   'Tail Whip']
 
 # stats [0: power, 1: accuracy, 2: pp]
-MS = np.array([[0, 0, 0],
-  [40, 255, 35], # scratch
-  [35, 242, 35], # tackle
-  [0, 255, 40], # growl
-  [0, 255, 35]]) # tail whip
+MS = np.array([[50, 256, 10], # struggle 165
+  [40, 255, 35], # scratch 10
+  [35, 242, 35], # tackle 33
+  [0, 255, 40], # growl 45
+  [0, 255, 35]]) # tail whip 39
 
 # modifiers [0: chance, 1: attack, 2: defense, 3: special, 4: speed]
-MM = np.array([[0, 0, 0, 0, 0],
+MM = np.array([[0, 0, 0, 0, 0], # struggle 165
   [0, 0, 0, 0, 0], # scratch
   [0, 0, 0, 0, 0], # tackle
   [256, -1, 0, 0, 0], # growl
   [256, 0, -1, 0, 0]]) # tail whip
 
+# recoil [0: percent recoil damage]
+MR = np.array([[50],
+  [0],
+  [0],
+  [0],
+  [0]])
 # scenario 1 specific
 
 # teams

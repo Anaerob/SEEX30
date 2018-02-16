@@ -7,7 +7,7 @@ class Move:
     self.name = c.MN[index]
     self.stats = c.MS[index, :]
     self.activeStats = self.stats.copy()
-    self.modifier = c.MM[index, :]
+    self.modifiers = c.MM[index, :]
   
   def printSelf(self):
     print('   ' + self.name + ': ' + str(self.activeStats[2]) + ' / ' + str(self.stats[2]) + ' PP')
