@@ -59,15 +59,23 @@ class Battle:
     else:
       # If the move is a damaging move, calculate and deduct damage
       if self.trainers[trainer].pokemon[self.trainers[trainer].currentPokemon].moves[self.trainers[trainer].nextMove].stats[0] != 0:
-        damage = self.calculateDamage(
-          self.trainers[trainer].pokemon[self.trainers[trainer].currentPokemon].level,
-          np.floor(
-            c.statModifiers[self.trainers[trainer].pokemon[self.trainers[trainer].currentPokemon].statModifiers[1]] *
-            self.trainers[trainer].pokemon[self.trainers[trainer].currentPokemon].stats[1] / 100),
-          self.trainers[trainer].pokemon[self.trainers[trainer].currentPokemon].moves[self.trainers[trainer].nextMove].stats[0],
-          np.floor(
-            c.statModifiers[self.trainers[(trainer + 1) % 2].pokemon[self.trainers[(trainer + 1) % 2].currentPokemon].statModifiers[2]] *
-            self.trainers[(trainer + 1) % 2].pokemon[self.trainers[(trainer + 1) % 2].currentPokemon].stats[2] / 100))
+        # If the move is a critical hit, calculate damage with double level and no modifiers
+        if np.random.randint(0, 256) < np.floor(self.trainers[trainer].pokemon[self.trainers[trainer].currentPokemon].stats[4] / 2):
+          damage = self.calculateDamage(
+            2 * self.trainers[trainer].pokemon[self.trainers[trainer].currentPokemon].level,
+            self.trainers[trainer].pokemon[self.trainers[trainer].currentPokemon].stats[1],
+            self.trainers[trainer].pokemon[self.trainers[trainer].currentPokemon].moves[self.trainers[trainer].nextMove].stats[0],
+            self.trainers[(trainer + 1) % 2].pokemon[self.trainers[(trainer + 1) % 2].currentPokemon].stats[2])
+        else:
+          damage = self.calculateDamage(
+            self.trainers[trainer].pokemon[self.trainers[trainer].currentPokemon].level,
+            np.floor(
+              c.statModifiers[self.trainers[trainer].pokemon[self.trainers[trainer].currentPokemon].statModifiers[1]] *
+              self.trainers[trainer].pokemon[self.trainers[trainer].currentPokemon].stats[1] / 100),
+            self.trainers[trainer].pokemon[self.trainers[trainer].currentPokemon].moves[self.trainers[trainer].nextMove].stats[0],
+            np.floor(
+              c.statModifiers[self.trainers[(trainer + 1) % 2].pokemon[self.trainers[(trainer + 1) % 2].currentPokemon].statModifiers[2]] *
+              self.trainers[(trainer + 1) % 2].pokemon[self.trainers[(trainer + 1) % 2].currentPokemon].stats[2] / 100))
         self.trainers[(trainer + 1) % 2].pokemon[self.trainers[(trainer + 1) % 2].currentPokemon].activeStats[0] -= damage
         print(
           self.trainers[trainer].name + '\'s ' +
