@@ -5,17 +5,38 @@ import Move
 
 class Pokemon:
   def __init__(self, index):
+    
+    ### Constants
+    
     self.index = index
     self.level = 5
     self.name = c.PN[self.index]
     
-    self.initializeStats()
-    self.activeStats = self.stats.copy()
-    self.statModifiers = np.array([6, 6, 6, 6, 6])
+    ### Initialize
     
-    self.numberofMoves = 0
-    self.moves = []
+    # Creates list self.moves = [Move1, Move2, Move3, Move4]
     self.initializeMoves()
+    # Creates list self.stats = [HP, Attack, Defense, Special, Speed]
+    self.initializeStats()
+    
+    ### State variables
+    
+    # Current HP
+    self.cHP = self.stats[0]
+    
+    # Non-volatile status conditions
+    self.burn = False
+    self.freeze = False
+    self.paralysis = False
+    self.poison = False
+    self.badPoison = [False, 0] # badPoison[1] = turn of infliction
+    self.sleep = False
+    
+    # Volatile status conditions
+    self.bound = False
+    self.confusion = False
+    self.flinch = False
+    self.leechSeed = False
   
   def calculateStats(self):
     # calculate hit points
@@ -30,19 +51,27 @@ class Pokemon:
       self.stats[i] = 5 + np.floor(self.level * (statTerm1 + statTerm2) / 100)
   
   def initializeMoves(self):
+    # Make the moves list with moves[0] = Struggle
+    self.moves = []
+    self.moves.append(Move.Move(165))
+    
+    # Get predetermined move set from Constants
     moveSet = c.PM[self.index, :]
+    # Number of moves
+    self.nM = 0
+    
     for i in range(0, moveSet.size):
       if moveSet[i] != 0:
-        self.numberofMoves += 1
+        self.nM += 1
     
-    if self.numberofMoves < 1:
+    if self.nM < 1:
       exit('Too few moves in move set')
-    if self.numberofMoves > 4:
+    if self.nM > 4:
       exit('Too many moves in move set')
     
-    for i in range(0, self.numberofMoves):
-      temp = Move.Move(moveSet[i])
-      self.moves.append(temp)
+    for i in range(0, self.nM):
+      tempMove = Move.Move(moveSet[i])
+      self.moves.append(tempMove)
   
   def initializeStats(self):
     # get predefined base stats for index
@@ -76,6 +105,6 @@ class Pokemon:
     print(' ' + self.name + ':')
     print('  HP: ' + str(self.activeStats[0]) + ' / ' + str(self.stats[0]))
     print('  Moves:')
-    for i in range (0, self.numberofMoves):
-      self.moves[i].printSelf()
+    for iM in range (0, self.nM):
+      self.moves[iM].printSelf()
 #

@@ -4,14 +4,15 @@ import time
 import AI
 import Battle
 import Constants as c
+import User
 
 nBattles = 10
 
 startTime = time.time()
 
-# Create AI
-blue = AI.AI()
-red = AI.AI()
+# Create AI or User
+blueAI = AI.AI()
+redAI = AI.AI()
 
 # Initialize win counter
 blueWins = 0
@@ -27,8 +28,11 @@ for iBattles in range(0, nBattles):
 
   # Run each battle
   while battle.running:
-    battle.blue.nextMove = blue.getMove()
-    battle.red.nextMove = red.getMove()
+    switch = 0
+    move = blueAI.getMove()
+    battle.blue.setNextMove(switch, move)
+    move = redAI.getMove()
+    battle.red.setNextMove(switch, move)
     battle.progress()
   
   # Count the winner

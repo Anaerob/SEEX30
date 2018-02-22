@@ -1,20 +1,18 @@
 import numpy as np
 
-testArray = np.array([[0, 1], [10, 11]])
 
-statReduction = np.array([100, 66, 50, 40, 33, 28, 25])
-statIncrement = np.array([100, 150, 200, 250, 300, 350, 400])
+### Pokemon
+
+# Status modifier factor (followed by integer division by 100)
 statModifiers = np.array([25, 28, 33, 40, 50, 66, 100, 150, 200, 250, 300, 350, 400]) # [6] = 100
 
-# Pokemon
-
-# names
+# Names
 PN = ['0',
   'Bulbasaur', '2', '3',
   'Charmander', '5', '6',
   'Squirtle', '8', '9']
 
-# base stats [0: hp, 1: attack, 2: defense, 3: special, 4: speed]
+# Base Stats [0: HP, 1: Attack, 2: Defense, 3: Special, 4: Speed]
 PBS = np.array([[0, 0, 0, 0, 0],
   [45, 49, 49, 65, 45], # bulbasaur
   [0, 0, 0, 0, 0],
@@ -26,21 +24,21 @@ PBS = np.array([[0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0]])
 
-# moves [0: struggle, 1: move 1, 2: move 2, 3: move 3, 4: move 4]
-PM = np.array([[165, 0, 0, 0, 0],
-  [165, 33, 45, 0, 0], # bulbasaur
-  [165, 0, 0, 0, 0],
-  [165, 0, 0, 0, 0],
-  [165, 10, 45, 0, 0], # charmander
-  [165, 0, 0, 0, 0],
-  [165, 0, 0, 0, 0],
-  [165, 33, 39, 0, 0], # squirtle
-  [165, 0, 0, 0, 0],
-  [165, 0, 0, 0, 0]])
+# Moves [Move 1, Move 2, Move 3, Move 4]
+PM = np.array([[0, 0, 0, 0],
+  [33, 45, 0, 0], # bulbasaur
+  [0, 0, 0, 0],
+  [0, 0, 0, 0],
+  [10, 45, 0, 0], # charmander
+  [0, 0, 0, 0],
+  [0, 0, 0, 0],
+  [33, 39, 0, 0], # squirtle
+  [0, 0, 0, 0],
+  [0, 0, 0, 0]])
 
 # Moves
 
-# names
+# Names
 MN = ['', # 0
   '',
   '',
@@ -208,7 +206,7 @@ MN = ['', # 0
   '',
   'Struggle'] # 165
 
-# stats [0: power, 1: accuracy, 2: pp]
+# Stats [Power, Accuracy, PP]
 MS = np.array([[0, 0, 0], # 0
   [0, 0, 0],
   [0, 0, 0],
