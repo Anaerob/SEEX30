@@ -35,7 +35,7 @@ class Trainer:
     self.nextMove = 0
   
   def setNextMove(self, switch, move):
-    if switch < 0 or switch > 6 or move < 0 or move > 4:
+    if switch < 0 or switch > self.nP or move < 0 or move > self.pokemon[self.cP].nM:
       exit('Illegal move set by Trainer ' + self.name + '!')
     
     if switch == 0 and move == 0: # Struggle

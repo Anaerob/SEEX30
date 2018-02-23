@@ -4,39 +4,125 @@ import Constants as c
 import Move
 
 class Pokemon:
-  def __init__(self, index):
+  def __init__(self, index, state = None):
     
     ### Constants
     
     self.index = index
-    self.level = 5
     self.name = c.PN[self.index]
+    self.base = c.PBS[self.index, :]
     
-    ### Initialize
+    # These are state variables in the general case but fixed in battle scenarios:
+    self.level = 5
+    self.effort = np.array([0, 0, 0, 0, 0])
     
-    # Creates list self.moves = [Move1, Move2, Move3, Move4]
-    self.initializeMoves()
-    # Creates list self.stats = [HP, Attack, Defense, Special, Speed]
-    self.initializeStats()
+    ### State
     
-    ### State variables
+    if state is None:
+      
+      # self.stats = [HP, Attack, Defense, Special, Speed]
+      self.individual = np.array([0, 0, 0, 0, 0])
+      self.generateIndividualValues()
+      self.stats = np.array([0, 0, 0, 0, 0])
+      self.calculateStats()
+      
+      # Current HP
+      self.cHP = self.stats[0]
+      
+      # Number of moves
+      self.nM = 0
+      
+      # self.moves = [Struggle, Move1, Move2, Move3, Move4]
+      self.moves = []
+      self.initializeMoves()
+      
+      # Non-volatile status conditions
+      self.burn = False
+      self.freeze = False
+      self.paralysis = False
+      self.poison = False
+      self.badPoison = False
+      self.badPoisonTurn = 0
+      self.sleep = False
+      
+      # Volatile status conditions
+      self.bound = False
+      self.confusion = False
+      self.flinch = False
+      self.leechSeed = False
+      
+    else:
+      setState(state)
+  
+  def setState(self, state):
+    
+    # self.stats = [HP, Attack, Defense, Special, Speed]
+    self.individual = state[0] # np.array([0, 0, 0, 0, 0]) + generateIndividualValues()
+    self.stats = state[1] # np.array([0, 0, 0, 0, 0]) + calculateStats()
     
     # Current HP
-    self.cHP = self.stats[0]
+    self.cHP = state[2] # self.stats[0]
+    
+    # self.moves = [Struggle, Move1, Move2, Move3, Move4]
+    moveSet = c.PM[self.index, :]
+    self.nM = state[3] # 0
+    if self.nM < 1:
+      exit('[setState]: Too few moves in move set')
+    if self.nM > 4:
+      exit('[setState]: Too many moves in move set')
+    self.moves = [] # + initializeMoves()
+    self.moves.append(Move.Move(165)) # Struggle not included in state since infinite PP
+    for iM in range(self.nM):
+      tempMove = Move.Move(moveSet[iM], state[4][iM])
+      self.moves.append(tempMove)
     
     # Non-volatile status conditions
-    self.burn = False
-    self.freeze = False
-    self.paralysis = False
-    self.poison = False
-    self.badPoison = [False, 0] # badPoison[1] = turn of infliction
-    self.sleep = False
+    self.burn = state[5] # False
+    self.freeze = state[6] # False
+    self.paralysis = state[7] # False
+    self.poison = state[8] # False
+    self.badPoison = state[9] # False
+    self.badPoisonTurn = state[10] # 0
+    self.sleep = state[11] # False
     
     # Volatile status conditions
-    self.bound = False
-    self.confusion = False
-    self.flinch = False
-    self.leechSeed = False
+    self.bound = state[12] # False
+    self.confusion = state[13] # False
+    self.flinch = state[14] # False
+    self.leechSeed = state[15] # False
+  
+  def getState(self, state):
+    
+    # Put everything in tempState and return it
+    tempState = []
+    
+    tempState.append(self.individual)
+    tempState.append(self.stats)
+    
+    tempState.append(self.cHP)
+    
+    tempState.append(self.nM)
+    tempMoveState = []
+    for iM in range(1, self.nM + 1): # Don't include Struggle since it has infinite PP
+      tempMoveState.append(self.moves[iM].getState())
+    tempState.append(tempMoveState)
+    
+    # Non-volatile status conditions
+    tempState.append(self.burn)
+    tempState.append(self.freeze)
+    tempState.append(self.paralysis)
+    tempState.append(self.poison)
+    tempState.append(self.badPoison)
+    tempState.append(self.badPoisonTurn)
+    tempState.append(self.sleep)
+    
+    # Volatile status conditions
+    tempState.append(self.bound)
+    tempState.append(self.confusion)
+    tempState.append(self.flinch)
+    tempState.append(self.leechSeed)
+    
+    return tempState
   
   def calculateStats(self):
     # calculate hit points
@@ -51,55 +137,29 @@ class Pokemon:
       self.stats[i] = 5 + np.floor(self.level * (statTerm1 + statTerm2) / 100)
   
   def initializeMoves(self):
-    # Make the moves list with moves[0] = Struggle
-    self.moves = []
+    # moves[0] = Struggle
     self.moves.append(Move.Move(165))
     
     # Get predetermined move set from Constants
     moveSet = c.PM[self.index, :]
-    # Number of moves
-    self.nM = 0
     
-    for i in range(0, moveSet.size):
-      if moveSet[i] != 0:
+    for iM in range(moveSet.size):
+      if moveSet[iM] != 0:
         self.nM += 1
     
     if self.nM < 1:
-      exit('Too few moves in move set')
+      exit('[initializeMoves]: Too few moves in move set')
     if self.nM > 4:
-      exit('Too many moves in move set')
+      exit('[initializeMoves]: Too many moves in move set')
     
-    for i in range(0, self.nM):
-      tempMove = Move.Move(moveSet[i])
+    for iM in range(self.nM):
+      tempMove = Move.Move(moveSet[iM])
       self.moves.append(tempMove)
   
-  def initializeStats(self):
-    # get predefined base stats for index
-    self.base = c.PBS[self.index, :]
-    
-    # generate random individual values
-    self.individual = np.array([0,
-      np.random.randint(0, 16),
-      np.random.randint(0, 16),
-      np.random.randint(0, 16),
-      np.random.randint(0, 16)])
-    if self.individual[1] % 2 != 0:
-      self.individual[0] += 8
-    if self.individual[2] % 2 != 0:
-      self.individual[0] += 4
-    if self.individual[3] % 2 != 0:
-      self.individual[0] += 1
-    if self.individual[4] % 2 != 0:
-      self.individual[0] += 2
-    
-    # initialize effort values to zero
-    self.effort = np.array([0, 0, 0, 0, 0])
-    
-    # initialize stats to zero
-    self.stats = np.array([0, 0, 0, 0, 0])
-    
-    # calculate stats properly based on base stats, individual values, effort values and level
-    self.calculateStats()
+  def generateIndividualValues(self):
+    for iI in range(1, 5):
+      self.individual[iI] = np.random.randint(0, 16)
+    self.individual[0] = 8 * (self.individual[1] % 2) + 4 * (self.individual[2] % 2) + 1 * (self.individual[3] % 2) + 2 * (self.individual[4] % 2)
   
   def printSelf(self):
     print(' ' + self.name + ':')
