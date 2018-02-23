@@ -22,7 +22,7 @@ redWins = 0
 for iBattles in range(0, nBattles):
   
   # Initialize each battle
-  battle = Battle.Battle()
+  battle = Battle.Battle(teams) # TODO: TEAMS
   battle.blue.setTeam(c.t2)
   battle.red.setTeam(c.t1)
 

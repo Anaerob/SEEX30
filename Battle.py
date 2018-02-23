@@ -4,7 +4,7 @@ import Constants as c
 import Trainer
 
 class Battle:
-  def __init__(self):
+  def __init__(self, teams):
     
     # Store the environment state here
     self.state = []
