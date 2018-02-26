@@ -4,12 +4,12 @@ import Constants as c
 import Trainer
 
 class Battle:
-  def __init__(self, teams, state = None):
+  def __init__(self, teams, printMe, state = None):
     
     ### Constants
     
     self.teams = teams
-    self.printMe = True
+    self.printMe = printMe
     
     ### State
     
@@ -23,9 +23,9 @@ class Battle:
       self.red = Trainer.Trainer('Red', self.teams[1])
       
       # Put both trainers in a list to avoid double code
-      self.trainers = []
-      self.trainers.append(self.blue)
-      self.trainers.append(self.red)
+      self.trainers = [self.blue, self.red]
+      #self.trainers.append(self.blue)
+      #self.trainers.append(self.red)
     
     else:
       self.setState(state)
@@ -42,7 +42,7 @@ class Battle:
     self.trainers.append(self.blue)
     self.trainers.append(self.red)
   
-  def getState(self):
+  def getState(self, trainerFlip):
     # Put everything in tempState and return it
     tempState = []
     
@@ -52,7 +52,11 @@ class Battle:
     
     tempTrainerState = []
     for iT in range(2):
-      tempTrainerState.append(self.trainers[iT].getState())
+      if trainerFlip:
+        tempTrainerState.append(self.trainers[(iT + 1) % 2].getState())
+      else:
+        tempTrainerState.append(self.trainers[iT].getState())
+      
     tempState.append(tempTrainerState)
     
     return tempState

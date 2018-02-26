@@ -11,68 +11,37 @@ nBattles = 1
 startTime = time.time()
 
 # Create AI or User
-blueAI = AI.AI()
-redAI = AI.AI()
+teams = [c.t2, c.t1]
+blueAI = AI.AI(teams[0], teams[1])
+redAI = AI.AI(teams[1], teams[0])
 
 # Initialize win counter
 blueWins = 0
 redWins = 0
 
+
 # Play many battles
 for iBattles in range(0, nBattles):
   
   # Initialize each battle
-  teams = []
-  teams.append(c.t2)
-  teams.append(c.t1)
-  battle = Battle.Battle(teams) # TODO: TEAMS
+  battle = Battle.Battle(teams, True)
   
   # Run each battle
   while battle.running:
-    switch = 0
-    move = blueAI.getMove()
-    battle.blue.setNextMove(switch, move)
-    move = redAI.getMove()
-    battle.red.setNextMove(switch, move)
+    move = blueAI.getMove(battle.getState(False))
+    battle.blue.setNextMove(move[0], move[1])
+    move = redAI.getMove(battle.getState(True))
+    battle.red.setNextMove(move[0], move[1])
     battle.progress()
-    battle.printSelf()
-    
-    if battle.round == 5:
-      battleState = battle.getState()
+    #battle.printSelf()
   
   # Count the winner
   if battle.winner == 0:
     blueWins += 1
+    print('Trainer Blue wins!')
   if battle.winner == 1:
     redWins += 1
-  
-  # Print some progress notice
-  if True:
-    print('# = ' + str(iBattles))
-
-teams = []
-teams.append(c.t2)
-teams.append(c.t1)
-battle2 = Battle.Battle(teams, battleState)
-
-while battle2.running:
-  switch = 0
-  move = blueAI.getMove()
-  battle2.blue.setNextMove(switch, move)
-  move = redAI.getMove()
-  battle2.red.setNextMove(switch, move)
-  battle2.progress()
-  battle2.printSelf()
-
-# Count the winner
-if battle2.winner == 0:
-  blueWins += 1
-if battle2.winner == 1:
-  redWins += 1
-
-# Print some progress notice
-if True:
-  print('# = ' + str(123))
+    print('Trainer Red wins!')
 
 print('Runtime: %d seconds' % (time.time() - startTime))
 #
