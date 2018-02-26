@@ -16,7 +16,7 @@ class Move:
     if state is None:
       self.cPP = self.stats[2]
     else:
-      setState(state)
+      self.setState(state)
   
   def setState(self, state):
     self.cPP = state

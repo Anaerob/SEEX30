@@ -52,18 +52,14 @@ class Pokemon:
       self.leechSeed = False
       
     else:
-      setState(state)
+      self.setState(state)
   
   def setState(self, state):
-    
-    # self.stats = [HP, Attack, Defense, Special, Speed]
     self.individual = state[0] # np.array([0, 0, 0, 0, 0]) + generateIndividualValues()
     self.stats = state[1] # np.array([0, 0, 0, 0, 0]) + calculateStats()
     
-    # Current HP
     self.cHP = state[2] # self.stats[0]
     
-    # self.moves = [Struggle, Move1, Move2, Move3, Move4]
     moveSet = c.PM[self.index, :]
     self.nM = state[3] # 0
     if self.nM < 1:
@@ -76,7 +72,6 @@ class Pokemon:
       tempMove = Move.Move(moveSet[iM], state[4][iM])
       self.moves.append(tempMove)
     
-    # Non-volatile status conditions
     self.burn = state[5] # False
     self.freeze = state[6] # False
     self.paralysis = state[7] # False
@@ -85,14 +80,12 @@ class Pokemon:
     self.badPoisonTurn = state[10] # 0
     self.sleep = state[11] # False
     
-    # Volatile status conditions
     self.bound = state[12] # False
     self.confusion = state[13] # False
     self.flinch = state[14] # False
     self.leechSeed = state[15] # False
   
-  def getState(self, state):
-    
+  def getState(self):
     # Put everything in tempState and return it
     tempState = []
     
@@ -107,7 +100,6 @@ class Pokemon:
       tempMoveState.append(self.moves[iM].getState())
     tempState.append(tempMoveState)
     
-    # Non-volatile status conditions
     tempState.append(self.burn)
     tempState.append(self.freeze)
     tempState.append(self.paralysis)
@@ -116,7 +108,6 @@ class Pokemon:
     tempState.append(self.badPoisonTurn)
     tempState.append(self.sleep)
     
-    # Volatile status conditions
     tempState.append(self.bound)
     tempState.append(self.confusion)
     tempState.append(self.flinch)
@@ -163,8 +154,8 @@ class Pokemon:
   
   def printSelf(self):
     print(' ' + self.name + ':')
-    print('  HP: ' + str(self.activeStats[0]) + ' / ' + str(self.stats[0]))
+    print('  HP: ' + str(self.cHP) + ' / ' + str(self.stats[0]))
     print('  Moves:')
-    for iM in range (0, self.nM):
+    for iM in range (1, self.nM + 1):
       self.moves[iM].printSelf()
 #

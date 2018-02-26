@@ -4,24 +4,58 @@ import Constants as c
 import Trainer
 
 class Battle:
-  def __init__(self, teams):
+  def __init__(self, teams, state = None):
     
-    # Store the environment state here
-    self.state = []
+    ### Constants
     
-    # Initialize both trainers Red and Blue
-    self.blue = Trainer.Trainer('Blue')
-    self.red = Trainer.Trainer('Red')
+    self.teams = teams
+    self.printMe = True
     
-    # Put both trainers in a list to avoid double code
+    ### State
+    
+    if state is None:
+      self.round = 0
+      self.running = True
+      self.winner = -1
+      
+      # Initialize both trainers Red and Blue
+      self.blue = Trainer.Trainer('Blue', self.teams[0])
+      self.red = Trainer.Trainer('Red', self.teams[1])
+      
+      # Put both trainers in a list to avoid double code
+      self.trainers = []
+      self.trainers.append(self.blue)
+      self.trainers.append(self.red)
+    
+    else:
+      self.setState(state)
+  
+  def setState(self, state):
+    self.round = state[0]
+    self.running = state[1]
+    self.winner = state[2]
+    
+    self.blue = Trainer.Trainer('Blue', self.teams[0], state[3][0])
+    self.red = Trainer.Trainer('Red', self.teams[1], state[3][1])
+    
     self.trainers = []
     self.trainers.append(self.blue)
     self.trainers.append(self.red)
+  
+  def getState(self):
+    # Put everything in tempState and return it
+    tempState = []
     
-    self.printAll = True
-    self.round = 0
-    self.running = True
-    self.winner = -1
+    tempState.append(self.round)
+    tempState.append(self.running)
+    tempState.append(self.winner)
+    
+    tempTrainerState = []
+    for iT in range(2):
+      tempTrainerState.append(self.trainers[iT].getState())
+    tempState.append(tempTrainerState)
+    
+    return tempState
   
   def progress(self):
     
@@ -52,7 +86,7 @@ class Battle:
     self.trainers[firstTrainer].resetNextMove()
     if self.trainers[(firstTrainer + 1) % 2].pokemon[self.trainers[(firstTrainer + 1) % 2].cP].cHP > 0:
       self.useMove((firstTrainer + 1) % 2)
-      self.trainers[(firstTrainer + 1) % 2].nextMove = -1
+      self.trainers[(firstTrainer + 1) % 2].resetNextMove()
     
     # Check if either pokemon fainted
     for iT in range(0, 2):
@@ -71,7 +105,7 @@ class Battle:
     # Check if move misses (correctly implements the 1/256 miss bug)
     ### TODO: Implement accuracy/evasion
     if np.random.randint(0, 256) >= self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].stats[1]:
-      if self.printAll:
+      if self.printMe:
         print(
           self.trainers[t].name + '\'s ' +
           self.trainers[t].pokemon[self.trainers[t].cP].name + '\'s ' +
@@ -88,8 +122,8 @@ class Battle:
             self.trainers[t].pokemon[self.trainers[t].cP].stats[1],
             self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].stats[0],
             self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].stats[2])
-          self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].cHP -= damage
-          if self.printAll:
+          self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].cHP -= int(damage)
+          if self.printMe:
             print(
               self.trainers[t].name + '\'s ' +
               self.trainers[t].pokemon[self.trainers[t].cP].name + '\'s ' +
@@ -107,8 +141,8 @@ class Battle:
             np.floor(
               c.statModifiers[self.trainers[(t + 1) % 2].mDefense] *
               self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].stats[2] / 100))
-          self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].cHP -= damage
-          if self.printAll:
+          self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].cHP -= int(damage)
+          if self.printMe:
             print(
               self.trainers[t].name + '\'s ' +
               self.trainers[t].pokemon[self.trainers[t].cP].name + '\'s ' +
@@ -124,7 +158,7 @@ class Battle:
           # If the opponents attack is at minimum, don't lower it further
           ### TODO: write lowering method that checks this
           if self.trainers[(t + 1) % 2].mAttack == 0:
-            if self.printAll:
+            if self.printMe:
               print(
                 self.trainers[(t + 1) % 2].name + '\'s ' +
                 self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].name + '\'s attack can\'t be lowered more!')
@@ -132,7 +166,7 @@ class Battle:
           # Else, lower it
           else:
             self.trainers[(t + 1) % 2].mAttack += self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].modifiers[1]
-            if self.printAll:
+            if self.printMe:
               print(
                 self.trainers[t].name + '\'s ' +
                 self.trainers[t].pokemon[self.trainers[t].cP].name + '\'s ' +
@@ -144,7 +178,7 @@ class Battle:
           
           # If the opponents defense is at minimum, don't lower it further
           if self.trainers[(t + 1) % 2].mDefense == 0:
-            if self.printAll:
+            if self.printMe:
               print(
                 self.trainers[(t + 1) % 2].name + '\'s ' +
                 self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].name + '\'s defense can\'t be lowered more!')
@@ -152,7 +186,7 @@ class Battle:
           # Else, lower it
           else:
             self.trainers[(t + 1) % 2].mDefense += self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].modifiers[2]
-            if self.printAll:
+            if self.printMe:
               print(
                 self.trainers[t].name + '\'s ' +
                 self.trainers[t].pokemon[self.trainers[t].cP].name + '\'s ' +

@@ -42,12 +42,12 @@ class Trainer:
       if self.nP > 6:
         exit('[Trainer]: Too many Pokemon in team')
       self.pokemon = []
-      for iP in range (self.nP):
+      for iP in range(self.nP):
         tempPokemon = Pokemon.Pokemon(team[iP])
         self.pokemon.append(tempPokemon)
       
     else:
-      setState(state)
+      self.setState(state)
   
   def setNextMove(self, switch, move):
     if self.nextActionSet:
@@ -69,10 +69,42 @@ class Trainer:
       self.nextActionSet = True
   
   def setState(self, state):
+    self.mAttack = state[0]
+    self.mDefense = state[1]
+    self.mSpecial = state[2]
+    self.mSpeed = state[3]
+    self.mAccuracy = state[4]
+    self.mEvasion = state[5]
     
+    self.cP = state[6]
+    
+    self.nP = state[7]
+    self.pokemon = []
+    for iP in range(self.nP):
+      tempPokemon = Pokemon.Pokemon(self.team[iP], state[8][iP])
+      self.pokemon.append(tempPokemon)
   
   def getState(self):
+    # Put everything in tempState and return it
+    tempState = []
     
+    tempState.append(self.mAttack)
+    tempState.append(self.mDefense)
+    tempState.append(self.mSpecial)
+    tempState.append(self.mSpeed)
+    tempState.append(self.mAccuracy)
+    tempState.append(self.mEvasion)
+    
+    tempState.append(self.cP)
+    
+    tempState.append(self.nP)
+    
+    tempPokemonState = []
+    for iP in range(self.nP):
+      tempPokemonState.append(self.pokemon[iP].getState())
+    tempState.append(tempPokemonState)
+    
+    return tempState
   
   def resetNextMove(self):
     self.nextActionSet = False
