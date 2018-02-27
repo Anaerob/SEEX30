@@ -25,7 +25,7 @@ for iBattles in range(0, nBattles):
   
   # Initialize each battle
   battle = Battle.Battle(teams, True)
-  
+  battle.printSelf()
   # Run each battle
   while battle.running:
     move = blueAI.getMove(battle.getState(False))
@@ -33,7 +33,7 @@ for iBattles in range(0, nBattles):
     move = redAI.getMove(battle.getState(True))
     battle.red.setNextMove(move[0], move[1])
     battle.progress()
-    #battle.printSelf()
+    battle.printSelf()
   
   # Count the winner
   if battle.winner == 0:
