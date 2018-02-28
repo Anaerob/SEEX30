@@ -1,10 +1,12 @@
 import numpy as np
 
+blue = True
+red = False
 
 ### Pokemon
 
 # Status modifier factor (followed by integer division by 100)
-statModifiers = np.array([25, 28, 33, 40, 50, 66, 100, 150, 200, 250, 300, 350, 400]) # [6] = 100
+statModifiers = np.array([25, 28, 33, 40, 50, 66, 100, 150, 200, 250, 300, 350, 400]) # [6] = 100, tot [0] to [12], 13 elements
 
 # Names
 PN = ['0',

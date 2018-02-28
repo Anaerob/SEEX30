@@ -24,6 +24,11 @@ class Move:
   def getState(self):
     return self.cPP
   
+  def getInput(self):
+    tempInput = np.array([self.cPP / self.stats[2]])
+    
+    return tempInput
+  
   def printSelf(self):
     print('   ' + self.name + ': ' + str(self.cPP) + ' / ' + str(self.stats[2]) + ' PP')
 #

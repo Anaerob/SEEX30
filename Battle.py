@@ -4,11 +4,12 @@ import Constants as c
 import Trainer
 
 class Battle:
-  def __init__(self, teams, printMe, state = None):
+  def __init__(self, blueTeam, redTeam, printMe, state = None):
     
     ### Constants
     
-    self.teams = teams
+    self.blueTeam = blueTeam
+    self.redTeam = redTeam
     self.printMe = printMe
     
     ### State
@@ -19,8 +20,8 @@ class Battle:
       self.winner = -1
       
       # Initialize both trainers Red and Blue
-      self.blue = Trainer.Trainer('Blue', self.teams[0])
-      self.red = Trainer.Trainer('Red', self.teams[1])
+      self.blue = Trainer.Trainer('Blue', self.blueTeam)
+      self.red = Trainer.Trainer('Red', self.redTeam)
       
       # Put both trainers in a list to avoid double code
       self.trainers = [self.blue, self.red]
@@ -35,14 +36,14 @@ class Battle:
     self.running = state[1]
     self.winner = state[2]
     
-    self.blue = Trainer.Trainer('Blue', self.teams[0], state[3][0])
-    self.red = Trainer.Trainer('Red', self.teams[1], state[3][1])
+    self.blue = Trainer.Trainer('Blue', self.blueTeam, state[3][0])
+    self.red = Trainer.Trainer('Red', self.redTeam, state[3][1])
     
     self.trainers = []
     self.trainers.append(self.blue)
     self.trainers.append(self.red)
   
-  def getState(self, trainerFlip):
+  def getState(self, isBlue):
     # Put everything in tempState and return it
     tempState = []
     
@@ -52,14 +53,22 @@ class Battle:
     
     tempTrainerState = []
     for iT in range(2):
-      if trainerFlip:
-        tempTrainerState.append(self.trainers[(iT + 1) % 2].getState())
-      else:
+      if isBlue:
         tempTrainerState.append(self.trainers[iT].getState())
+      else:
+        tempTrainerState.append(self.trainers[(iT + 1) % 2].getState())
       
     tempState.append(tempTrainerState)
     
     return tempState
+  
+  def getInput(self):
+    tempInput = np.array([])
+    
+    tempInput = np.append(tempInput, self.blue.getInput())
+    tempInput = np.append(tempInput, self.red.getInput())
+    
+    return tempInput
   
   def progress(self):
     
@@ -87,10 +96,10 @@ class Battle:
     
     # Use moves in order, only use second move if Pokemon still active
     self.useMove(firstTrainer)
-    self.trainers[firstTrainer].resetNextMove()
+    self.trainers[firstTrainer].resetNextAction()
     if self.trainers[(firstTrainer + 1) % 2].pokemon[self.trainers[(firstTrainer + 1) % 2].cP].cHP > 0:
       self.useMove((firstTrainer + 1) % 2)
-      self.trainers[(firstTrainer + 1) % 2].resetNextMove()
+      self.trainers[(firstTrainer + 1) % 2].resetNextAction()
     
     # Check if either pokemon fainted
     for iT in range(0, 2):

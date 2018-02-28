@@ -115,6 +115,26 @@ class Pokemon:
     
     return tempState
   
+  def getInput(self):
+    tempInput = np.array([self.cHP / self.stats[0]])
+    
+    for iM in range(1, self.nM + 1):
+      tempInput = np.append(tempInput, self.moves[iM].getInput())
+    
+    tempInput = np.append(tempInput, int(self.burn))
+    tempInput = np.append(tempInput, int(self.freeze))
+    tempInput = np.append(tempInput, int(self.paralysis))
+    tempInput = np.append(tempInput, int(self.poison))
+    tempInput = np.append(tempInput, int(self.badPoison))
+    tempInput = np.append(tempInput, int(self.sleep))
+    
+    tempInput = np.append(tempInput, int(self.bound))
+    tempInput = np.append(tempInput, int(self.confusion))
+    tempInput = np.append(tempInput, int(self.flinch))
+    tempInput = np.append(tempInput, int(self.leechSeed))
+    
+    return tempInput
+  
   def calculateStats(self):
     # calculate hit points
     hpTerm1 = 2 * (self.base[0] + self.individual[0])

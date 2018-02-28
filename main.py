@@ -10,10 +10,13 @@ nBattles = 1
 
 startTime = time.time()
 
+# Define teams
+blueTeam = c.t2
+redTeam = c.t1
+
 # Create AI or User
-teams = [c.t2, c.t1]
-blueAI = AI.AI(teams[0], teams[1])
-redAI = AI.AI(teams[1], teams[0])
+blueAI = AI.AI(blueTeam, redTeam)
+redAI = AI.AI(redTeam, blueTeam)
 
 # Initialize win counter
 blueWins = 0
@@ -24,14 +27,14 @@ redWins = 0
 for iBattles in range(0, nBattles):
   
   # Initialize each battle
-  battle = Battle.Battle(teams, True)
+  battle = Battle.Battle(blueTeam, redTeam, True)
   battle.printSelf()
   # Run each battle
   while battle.running:
-    move = blueAI.getMove(battle.getState(False))
-    battle.blue.setNextMove(move[0], move[1])
-    move = redAI.getMove(battle.getState(True))
-    battle.red.setNextMove(move[0], move[1])
+    action = blueAI.getAction(battle.getState(c.blue))
+    battle.blue.setNextAction(action)
+    action = redAI.getAction(battle.getState(c.red))
+    battle.red.setNextAction(action)
     battle.progress()
     battle.printSelf()
   

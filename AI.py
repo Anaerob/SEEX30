@@ -5,8 +5,10 @@ import Battle
 class AI:
   def __init__(self, myTeam, opTeam):
     self.x = 1
-    self.recursionStart = 100
-    self.recursionEnd = 10 # **2 = 16
+    self.recursionStart = 4
+    self.recursionEnd = 2
+    
+    self.weights = np.ones((2, 38)) # scenario 1: 38 in, 2 out
     
     self.myTeam = myTeam
     self.opTeam = opTeam
@@ -24,29 +26,29 @@ class AI:
     
     for iAction in range(2):
       for iSim in range(nSim):
-        sim = Battle.Battle([self.myTeam, self.opTeam], False, state)
+        sim = Battle.Battle(self.myTeam, self.opTeam, False, state)
         
-        sim.blue.setNextMove(0, iAction + 1)
-        sim.red.setNextMove(0, np.random.randint(1, 3))
+        sim.blue.setNextAction([0, iAction + 1])
+        sim.red.setNextAction([0, np.random.randint(1, 3)])
         sim.progress()
         
         while sim.running:
           if sim.blue.pokemon[sim.blue.cP].moves[1].cPP == 0 and sim.blue.pokemon[sim.blue.cP].moves[2].cPP == 0:
-            sim.blue.setNextMove(0, 0)
+            sim.blue.setNextAction([0, 0])
           elif sim.blue.pokemon[sim.blue.cP].moves[1].cPP == 0:
-            sim.blue.setNextMove(0, 2)
+            sim.blue.setNextAction([0, 2])
           elif sim.blue.pokemon[sim.blue.cP].moves[2].cPP == 0:
-            sim.blue.setNextMove(0, 1)
+            sim.blue.setNextAction([0, 1])
           else:
-            sim.blue.setNextMove(0, np.random.randint(1, 3))
+            sim.blue.setNextAction([0, np.random.randint(1, 3)])
           if sim.red.pokemon[sim.red.cP].moves[1].cPP == 0 and sim.red.pokemon[sim.red.cP].moves[2].cPP == 0:
-            sim.red.setNextMove(0, 0)
+            sim.red.setNextAction([0, 0])
           elif sim.red.pokemon[sim.red.cP].moves[1].cPP == 0:
-            sim.red.setNextMove(0, 2)
+            sim.red.setNextAction([0, 2])
           elif sim.red.pokemon[sim.red.cP].moves[2].cPP == 0:
-            sim.red.setNextMove(0, 1)
+            sim.red.setNextAction([0, 1])
           else:
-            sim.red.setNextMove(0, np.random.randint(1, 3))
+            sim.red.setNextAction([0, np.random.randint(1, 3)])
           sim.progress()
         
         wins[iAction] += (sim.winner + 1) % 2
@@ -70,37 +72,37 @@ class AI:
     
     for iAction in range(2):
       for iSim in range(nSim):
-        sim = Battle.Battle([self.myTeam, self.opTeam], False, state)
+        sim = Battle.Battle(self.myTeam, self.opTeam, False, state)
         
-        sim.blue.setNextMove(0, iAction + 1)
-        sim.red.setNextMove(0, np.random.randint(1, 3))
+        sim.blue.setNextAction([0, iAction + 1])
+        sim.red.setNextAction([0, np.random.randint(1, 3)])
         sim.progress()
         
         while sim.running:
           if sim.blue.pokemon[sim.blue.cP].moves[1].cPP == 0 and sim.blue.pokemon[sim.blue.cP].moves[2].cPP == 0:
-            sim.blue.setNextMove(0, 0)
+            sim.blue.setNextAction([0, 0])
           elif sim.blue.pokemon[sim.blue.cP].moves[1].cPP == 0:
-            sim.blue.setNextMove(0, 2)
+            sim.blue.setNextAction([0, 2])
           elif sim.blue.pokemon[sim.blue.cP].moves[2].cPP == 0:
-            sim.blue.setNextMove(0, 1)
+            sim.blue.setNextAction([0, 1])
           else:
             if nSim > self.recursionEnd ** 2:
               move = blueRecAI.simpleMCSRecursion(int(nSim / self.recursionEnd), sim.getState(False))
             else:
               move = blueRecAI.simpleMCS(self.recursionEnd, sim.getState(False))
-            sim.blue.setNextMove(move[0], move[1])
+            sim.blue.setNextAction([move[0], move[1]])
           if sim.red.pokemon[sim.red.cP].moves[1].cPP == 0 and sim.red.pokemon[sim.red.cP].moves[2].cPP == 0:
-            sim.red.setNextMove(0, 0)
+            sim.red.setNextAction([0, 0])
           elif sim.red.pokemon[sim.red.cP].moves[1].cPP == 0:
-            sim.red.setNextMove(0, 2)
+            sim.red.setNextAction([0, 2])
           elif sim.red.pokemon[sim.red.cP].moves[2].cPP == 0:
-            sim.red.setNextMove(0, 1)
+            sim.red.setNextAction([0, 1])
           else:
             if nSim > self.recursionEnd ** 2:
               move = redRecAI.simpleMCSRecursion(int(nSim / self.recursionEnd), sim.getState(True))
             else:
               move = redRecAI.simpleMCS(self.recursionEnd, sim.getState(True))
-            sim.red.setNextMove(move[0], move[1])
+            sim.red.setNextAction([move[0], move[1]])
           sim.progress()
         
         wins[iAction] += (sim.winner + 1) % 2
@@ -109,7 +111,17 @@ class AI:
       print(wins)
     return [0, 1 + wins.index(max(wins))]
   
-  def getMove(self, state = None):
+  def qApprox(self, input):
+    output = np.dot(self.weights, input)
+    
+    policy = np.exp(output) / np.sum(np.exp(output), axis = 0)
+    
+    actions = [1, 2]
+    choice = np.random.choice(actions, p = policy)
+    
+    return choice
+  
+  def getAction(self, state = None):
     if state == None:
       return [0, np.random.randint(1, 3)]
       
@@ -130,8 +142,8 @@ class AI:
           move = np.random.randint(1, 3)
           moves.append(move)
           
-          battleSim.blue.setNextMove(0, move)
-          battleSim.red.setNextMove(0, np.random.randint(1, 3))
+          battleSim.blue.setNextAction(0, move)
+          battleSim.red.setNextAction(0, np.random.randint(1, 3))
           battleSim.progress()
         
         string = ''

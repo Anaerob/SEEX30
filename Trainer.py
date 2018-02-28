@@ -49,7 +49,10 @@ class Trainer:
     else:
       self.setState(state)
   
-  def setNextMove(self, switch, move):
+  def setNextAction(self, action):
+    switch = action[0]
+    move = action[1]
+    
     if self.nextActionSet:
       exit('[setNextMove]: Move already set!')
     if switch < 0 or switch > self.nP or move < 0 or move > self.pokemon[self.cP].nM:
@@ -106,7 +109,26 @@ class Trainer:
     
     return tempState
   
-  def resetNextMove(self):
+  def getInput(self):
+    tempInput = np.array([])
+    
+    tempInput = np.append(tempInput, self.mAttack / 12)
+    tempInput = np.append(tempInput, self.mDefense / 12)
+    tempInput = np.append(tempInput, self.mSpecial / 12)
+    tempInput = np.append(tempInput, self.mSpeed / 12)
+    tempInput = np.append(tempInput, self.mAccuracy / 12)
+    tempInput = np.append(tempInput, self.mEvasion / 12)
+    
+    tempInput = np.append(tempInput, self.pokemon[self.cP].getInput())
+    
+    for iP in range(self.nP):
+      if iP == self.cP:
+        continue
+      tempInput = np.append(tempInput, self.pokemon[iP].getInput())
+    
+    return tempInput
+  
+  def resetNextAction(self):
     self.nextActionSet = False
     self.nextSwitch = 0
     self.nextMove = 0
