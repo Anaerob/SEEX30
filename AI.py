@@ -3,12 +3,14 @@ import numpy as np
 import Battle
 
 class AI:
-  def __init__(self, myTeam, opTeam):
+  def __init__(self, myTeam, opTeam, weights = None):
     self.x = 1
+    self.learningRate = 0.01
     self.recursionStart = 4
     self.recursionEnd = 2
     
-    self.weights = np.ones((2, 38)) # scenario 1: 38 in, 2 out
+    if weights is None:
+      self.weights = np.zeros((2, 38)) # scenario 1: 38 in, 2 out
     
     self.myTeam = myTeam
     self.opTeam = opTeam
@@ -111,7 +113,17 @@ class AI:
       print(wins)
     return [0, 1 + wins.index(max(wins))]
   
+  def train(self, input, action, reward):
+    # For action 0
+    if action == 1:
+      self.weights[0] += self.learningRate * (reward - np.dot(self.weights[0], input)) * input
+    
+    # For action 1
+    if action == 2:
+      self.weights[1] += self.learningRate * (reward - np.dot(self.weights[1], input)) * input
+  
   def qApprox(self, input):
+    # q_a(s) = x^T w_a
     output = np.dot(self.weights, input)
     
     policy = np.exp(output) / np.sum(np.exp(output), axis = 0)
@@ -119,7 +131,14 @@ class AI:
     actions = [1, 2]
     choice = np.random.choice(actions, p = policy)
     
-    return choice
+    if input[7] == 0 and input[8] == 0:
+      choice = 0
+    elif input[8] == 0:
+      choice = 1
+    elif input[7] == 0:
+      choice = 2
+    
+    return [0, choice]
   
   def getAction(self, state = None):
     if state == None:

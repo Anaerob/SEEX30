@@ -62,11 +62,15 @@ class Battle:
     
     return tempState
   
-  def getInput(self):
+  def getInput(self, isBlue):
     tempInput = np.array([])
     
-    tempInput = np.append(tempInput, self.blue.getInput())
-    tempInput = np.append(tempInput, self.red.getInput())
+    if isBlue:
+      tempInput = np.append(tempInput, self.blue.getInput())
+      tempInput = np.append(tempInput, self.red.getInput())
+    else:
+      tempInput = np.append(tempInput, self.red.getInput())
+      tempInput = np.append(tempInput, self.blue.getInput())
     
     return tempInput
   
