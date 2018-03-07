@@ -1,12 +1,20 @@
 import numpy as np
 
-blue = True
-red = False
+amWhite = True
+amBlack = False
 
-### Pokemon
+nOutputs = 2
+nInputs = 10
+
+# teams
+team1 = np.array([1])
+team2 = np.array([4])
+team3 = np.array([7])
 
 # Status modifier factor (followed by integer division by 100)
 statModifiers = np.array([25, 28, 33, 40, 50, 66, 100, 150, 200, 250, 300, 350, 400]) # [6] = 100, tot [0] to [12], 13 elements
+
+### Pokemon
 
 # Names
 PN = ['0',
@@ -374,7 +382,7 @@ MS = np.array([[0, 0, 0], # 0
   [0, 0, 0],
   [0, 0, 0],
   [0, 0, 0],
-  [50, 256, 10]]) # 165: Struggle
+  [50, 256, 100]]) # 165: Struggle
 
 # modifiers [0: chance, 1: attack, 2: defense, 3: special, 4: speed]
 MM = np.array([[0, 0, 0, 0, 0], # 0
@@ -543,20 +551,5 @@ MM = np.array([[0, 0, 0, 0, 0], # 0
   [0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0]]) # 165: Struggle
-
-# recoil [0: percent recoil damage]
-# MR = np.array([[0]])
-
-# scenario 1 specific
-
-# teams
-t1 = np.array([1])
-t2 = np.array([4])
-t3 = np.array([7])
-
-# scenario 2 specific
-
-# teams
-team = np.array([3, 6, 9])
 
 #

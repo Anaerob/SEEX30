@@ -11,10 +11,16 @@ class Move:
     self.stats = c.MS[index, :]
     self.modifiers = c.MM[index, :]
     
+    # For clarity in code
+    self.power = self.stats[0]
+    self.accuracy = self.stats[1]
+    self.PP = self.stats[2]
+    
     ### State
     
     if state is None:
-      self.cPP = self.stats[2]
+      # Current PP
+      self.cPP = self.PP
     else:
       self.setState(state)
   
@@ -25,10 +31,8 @@ class Move:
     return self.cPP
   
   def getInput(self):
-    tempInput = np.array([self.cPP / self.stats[2]])
-    
-    return tempInput
+    return np.array([self.cPP / self.PP])
   
   def printSelf(self):
-    print('   ' + self.name + ': ' + str(self.cPP) + ' / ' + str(self.stats[2]) + ' PP')
+    print('   ' + self.name + ': ' + str(self.cPP) + ' / ' + str(self.PP) + ' PP')
 #

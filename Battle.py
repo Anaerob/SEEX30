@@ -4,12 +4,12 @@ import Constants as c
 import Trainer
 
 class Battle:
-  def __init__(self, blueTeam, redTeam, printMe, state = None):
+  def __init__(self, whiteTeam, blackTeam, printMe, state = None):
     
     ### Constants
     
-    self.blueTeam = blueTeam
-    self.redTeam = redTeam
+    self.whiteTeam = whiteTeam
+    self.blackTeam = blackTeam
     self.printMe = printMe
     
     ### State
@@ -19,15 +19,13 @@ class Battle:
       self.running = True
       self.winner = -1
       
-      # Initialize both trainers Red and Blue
-      self.blue = Trainer.Trainer('Blue', self.blueTeam)
-      self.red = Trainer.Trainer('Red', self.redTeam)
+      # Initialize trainers White and Black
+      self.white = Trainer.Trainer('White', self.whiteTeam)
+      self.black = Trainer.Trainer('Black', self.blackTeam)
       
-      # Put both trainers in a list to avoid double code
-      self.trainers = [self.blue, self.red]
-      #self.trainers.append(self.blue)
-      #self.trainers.append(self.red)
-    
+      # Put trainers in a list to avoid double code
+      self.trainers = [self.white, self.black]
+      
     else:
       self.setState(state)
   
@@ -36,45 +34,41 @@ class Battle:
     self.running = state[1]
     self.winner = state[2]
     
-    self.blue = Trainer.Trainer('Blue', self.blueTeam, state[3][0])
-    self.red = Trainer.Trainer('Red', self.redTeam, state[3][1])
-    
-    self.trainers = []
-    self.trainers.append(self.blue)
-    self.trainers.append(self.red)
+    self.white = Trainer.Trainer('White', self.whiteTeam, state[3])
+    self.black = Trainer.Trainer('Black', self.blackTeam, state[4])
+    self.trainers = [self.white, self.black]
   
-  def getState(self, isBlue):
-    # Put everything in tempState and return it
+  def getState(self, isWhite):
     tempState = []
     
     tempState.append(self.round)
     tempState.append(self.running)
     tempState.append(self.winner)
     
-    tempTrainerState = []
-    for iT in range(2):
-      if isBlue:
-        tempTrainerState.append(self.trainers[iT].getState())
-      else:
-        tempTrainerState.append(self.trainers[(iT + 1) % 2].getState())
-      
-    tempState.append(tempTrainerState)
+    if isWhite:
+      tempState.append(self.white.getState())
+      tempState.append(self.black.getState())
+    else:
+      tempState.append(self.black.getState())
+      tempState.append(self.white.getState())
     
     return tempState
   
-  def getInput(self, isBlue):
+  def getInput(self, isWhite):
     tempInput = np.array([])
     
-    if isBlue:
-      tempInput = np.append(tempInput, self.blue.getInput())
-      tempInput = np.append(tempInput, self.red.getInput())
+    if isWhite:
+      tempInput = np.append(tempInput, self.white.getInput())
+      tempInput = np.append(tempInput, self.black.getInput())
     else:
-      tempInput = np.append(tempInput, self.red.getInput())
-      tempInput = np.append(tempInput, self.blue.getInput())
+      tempInput = np.append(tempInput, self.black.getInput())
+      tempInput = np.append(tempInput, self.white.getInput())
     
     return tempInput
   
   def progress(self):
+    if self.printMe:
+      print('Round ' + str(self.round) + '!')
     
     # For both trainers
     for iT in range(0, 2):
@@ -82,136 +76,119 @@ class Battle:
       # Check if an action has been chosen
       if not self.trainers[iT].nextActionSet:
         exit('Trainer ' + self.trainers[iT].name + ' move not set!')
-      elif self.trainers[iT].nextMove < 0 or self.trainers[iT].nextMove > 4:
+      elif self.trainers[iT].nextMove < 0 or self.trainers[iT].nextMove > 2:
         exit('Trainer ' + self.trainers[iT].name + ' chosen move is illegal!')
       
       # Check if the chosen move has any pp remaining
-      elif self.trainers[iT].pokemon[self.trainers[iT].cP].moves[self.trainers[iT].nextMove].cPP <= 0:
+      elif self.trainers[iT].pokemon[self.trainers[iT].cP - 1].moves[self.trainers[iT].nextMove].cPP <= 0:
         exit('Trainer ' + self.trainers[iT].name + ' chose move with no PP remaining!')
     
     # Determine who strikes first based on speed (coin toss if speed is equal)
-    ### TODO: fix "active" speed, fix paralysis
     firstTrainer = 0
-    if self.trainers[0].pokemon[self.trainers[0].cP].stats[4] < self.trainers[1].pokemon[self.trainers[1].cP].stats[4]:
+    if self.trainers[0].pokemon[self.trainers[0].cP - 1].speed < self.trainers[1].pokemon[self.trainers[1].cP - 1].speed:
       firstTrainer = 1
-    elif self.trainers[0].pokemon[self.trainers[0].cP].stats[4] == self.trainers[1].pokemon[self.trainers[1].cP].stats[4]:
-      if np.random.randint(0, 2) == 0: # returns 0 or 1, 50/50
+    elif self.trainers[0].pokemon[self.trainers[0].cP - 1].speed == self.trainers[1].pokemon[self.trainers[1].cP - 1].speed:
+      # Returns 0 or 1
+      if np.random.randint(0, 2) == 0:
         firstTrainer = 1
     
     # Use moves in order, only use second move if Pokemon still active
+    if self.printMe:
+      print(
+        self.trainers[firstTrainer].name + '\'s ' +
+        self.trainers[firstTrainer].pokemon[self.trainers[firstTrainer].cP - 1].name + ' used ' +
+        self.trainers[firstTrainer].pokemon[self.trainers[firstTrainer].cP - 1].moves[self.trainers[firstTrainer].nextMove].name + '!')
     self.useMove(firstTrainer)
     self.trainers[firstTrainer].resetNextAction()
-    if self.trainers[(firstTrainer + 1) % 2].pokemon[self.trainers[(firstTrainer + 1) % 2].cP].cHP > 0:
+    if self.trainers[(firstTrainer + 1) % 2].pokemon[self.trainers[(firstTrainer + 1) % 2].cP - 1].cHP > 0:
+      if self.printMe:
+        print(
+          self.trainers[(firstTrainer + 1) % 2].name + '\'s ' +
+          self.trainers[(firstTrainer + 1) % 2].pokemon[self.trainers[(firstTrainer + 1) % 2].cP - 1].name + ' used ' +
+          self.trainers[(firstTrainer + 1) % 2].pokemon[self.trainers[(firstTrainer + 1) % 2].cP - 1].moves[self.trainers[(firstTrainer + 1) % 2].nextMove].name + '!')
       self.useMove((firstTrainer + 1) % 2)
       self.trainers[(firstTrainer + 1) % 2].resetNextAction()
     
     # Check if either pokemon fainted
     for iT in range(0, 2):
-      if self.trainers[iT].pokemon[self.trainers[iT].cP].cHP <= 0:
+      if self.trainers[iT].pokemon[self.trainers[iT].cP - 1].cHP <= 0:
         self.running = False
         self.winner = (iT + 1) % 2
     
-    # Increment round counter
+    if self.printMe:
+      print()
+    
     self.round += 1
   
   def useMove(self, t): # t: trainer
-    
     # Deduct PP
-    self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].cPP -= 1
+    self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].cPP -= 1
     
     # Check if move misses (correctly implements the 1/256 miss bug)
-    ### TODO: Implement accuracy/evasion
-    if np.random.randint(0, 256) >= self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].stats[1]:
+    if np.random.randint(0, 256) >= self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].accuracy:
       if self.printMe:
-        print(
+        print('  ' +
           self.trainers[t].name + '\'s ' +
-          self.trainers[t].pokemon[self.trainers[t].cP].name + '\'s ' +
-          self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].name + ' missed!')
+          self.trainers[t].pokemon[self.trainers[t].cP - 1].name + ' missed!')
+      
     else:
       
       # If the move is a damaging move, calculate and deduct damage
-      if self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].stats[0] != 0:
+      if self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].power != 0:
         
         # If the move is a critical hit, calculate damage with double level and no modifiers
-        if np.random.randint(0, 256) < np.floor(self.trainers[t].pokemon[self.trainers[t].cP].stats[4] / 2):
+        if np.random.randint(0, 256) < np.floor(self.trainers[t].pokemon[self.trainers[t].cP - 1].speed / 2):
           damage = self.calculateDamage(
-            2 * self.trainers[t].pokemon[self.trainers[t].cP].level,
-            self.trainers[t].pokemon[self.trainers[t].cP].stats[1],
-            self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].stats[0],
-            self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].stats[2])
-          self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].cHP -= int(damage)
+            2 * self.trainers[t].pokemon[self.trainers[t].cP - 1].level,
+            self.trainers[t].pokemon[self.trainers[t].cP - 1].attack,
+            self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].power,
+            self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP - 1].defense)
+          self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP - 1].cHP -= int(damage)
           if self.printMe:
-            print(
+            print('  ' +
               self.trainers[t].name + '\'s ' +
-              self.trainers[t].pokemon[self.trainers[t].cP].name + '\'s ' +
-              self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].name +
+              self.trainers[t].pokemon[self.trainers[t].cP - 1].name +
               ' did ' + str(damage) + ' critical damage!')
         
-        # If not, normal calculation with modifiers
+        # If not a critical hit, normal calculation with modifiers
         else:
           damage = self.calculateDamage(
-            self.trainers[t].pokemon[self.trainers[t].cP].level,
+            self.trainers[t].pokemon[self.trainers[t].cP - 1].level,
             np.floor(
               c.statModifiers[self.trainers[t].mAttack] *
-              self.trainers[t].pokemon[self.trainers[t].cP].stats[1] / 100),
-            self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].stats[0],
+              self.trainers[t].pokemon[self.trainers[t].cP - 1].attack / 100),
+            self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].power,
             np.floor(
               c.statModifiers[self.trainers[(t + 1) % 2].mDefense] *
-              self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].stats[2] / 100))
-          self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].cHP -= int(damage)
+              self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP - 1].defense / 100))
+          self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP - 1].cHP -= int(damage)
           if self.printMe:
-            print(
+            print('  ' +
               self.trainers[t].name + '\'s ' +
-              self.trainers[t].pokemon[self.trainers[t].cP].name + '\'s ' +
-              self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].name +
+              self.trainers[t].pokemon[self.trainers[t].cP - 1].name +
               ' did ' + str(damage) + ' damage!')
       
       # If the move is a stat modifying move, modify the stat
-      if self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].modifiers[0] != 0:
+      if self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].modifiers[0] != 0:
         
-        # If the move decreases the attack stat
-        if self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].modifiers[1] < 0:
+        # Loop over all stats (1: Attack, 2: Defense, 3: Special, 4: Speed, 5: Accuracy, 6: Evasion)
+        for iStat in range(1, 3):
           
-          # If the opponents attack is at minimum, don't lower it further
-          ### TODO: write lowering method that checks this
-          if self.trainers[(t + 1) % 2].mAttack == 0:
-            if self.printMe:
-              print(
+          # If the move decreases iStat
+          if self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].modifiers[iStat] < 0:
+            
+            # Try decreasing it (returns True if success, False if at minimum)
+            if self.printMe and self.trainers[(t + 1) % 2].modifyStat(iStat, self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].modifiers[iStat]):
+              print('  ' +
                 self.trainers[(t + 1) % 2].name + '\'s ' +
-                self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].name + '\'s attack can\'t be lowered more!')
-          
-          # Else, lower it
-          else:
-            self.trainers[(t + 1) % 2].mAttack += self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].modifiers[1]
-            if self.printMe:
-              print(
-                self.trainers[t].name + '\'s ' +
-                self.trainers[t].pokemon[self.trainers[t].cP].name + '\'s ' +
-                self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].name +
-                ' reduced ' + self.trainers[(t + 1) % 2].name + '\'s attack!')
-        
-        # If the move decreases the defense stat
-        if self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].modifiers[2] < 0:
-          
-          # If the opponents defense is at minimum, don't lower it further
-          if self.trainers[(t + 1) % 2].mDefense == 0:
-            if self.printMe:
-              print(
+                self.trainers[(t + 1) % 2].pokemon[self.trainers[t].cP - 1].name + '\'s stat was reduced!')
+              
+            elif self.printMe:
+              print('  ' +
                 self.trainers[(t + 1) % 2].name + '\'s ' +
-                self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].name + '\'s defense can\'t be lowered more!')
-          
-          # Else, lower it
-          else:
-            self.trainers[(t + 1) % 2].mDefense += self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].modifiers[2]
-            if self.printMe:
-              print(
-                self.trainers[t].name + '\'s ' +
-                self.trainers[t].pokemon[self.trainers[t].cP].name + '\'s ' +
-                self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextMove].name +
-                ' reduced ' + self.trainers[(t + 1) % 2].name + '\'s defense!')
+                self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP - 1].name + '\'s stat can\'t be lowered more!')
   
-  def calculateDamage(self, l, a, p, d): # a, n, c, e
-    
+  def calculateDamage(self, l, a, p, d):
     # Calculate raw damage
     factor1 = 2 + np.floor(2 * l / 5)
     factor2 = p * a
@@ -226,8 +203,8 @@ class Battle:
   
   def printSelf(self):
     print()
-    self.blue.printSelf()
+    self.white.printSelf()
     print()
-    self.red.printSelf()
+    self.black.printSelf()
     print()
 #

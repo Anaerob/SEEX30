@@ -11,96 +11,66 @@ class Trainer:
     self.name = name
     self.team = team
     
+    ## State variables in the general case but fixed in battle scenarios:
+    # Number of Pokemon
+    self.nP = 1
+    
+    ## State variables in the general case but fixed in scenario 1:
+    # Currently active Pokemon
+    self.cP = 1
+    
     ### Next action
     
     # Switch takes precedence over Move
-    # Switch: 1 - 6 \ {unavailable Pokemon}, 0: not set
-    # Move 1 - 4 \ {unavailable moves}, 0: struggle (no PP remaining for any move)
+    # Switch: 1 - 6 \ {unavailable Pokemon}
+    # Switch: 0 = Not set
+    # Move: 1 - 4 \ {unavailable moves}
+    # Move: 0 = Struggle (only when no PP remaining for any move)
     self.nextActionSet = False
-    self.nextSwitch = 0
     self.nextMove = 0
     
     ### State
     
     if state is None:
-      
       # Stat modifiers (only for currently active Pokemon)
-      self.mAttack = 6
-      self.mDefense = 6
-      self.mSpecial = 6
-      self.mSpeed = 6
-      self.mAccuracy = 6
-      self.mEvasion = 6
+      self.statMods = np.array([6, 6, 6])
       
-      # Currently active Pokemon
-      self.cP = 0
+      # For clarity in code
+      self.mAttack = self.statMods[1]
+      self.mDefense = self.statMods[2]
       
       # Pokemon
-      self.nP = self.team.size
-      if self.nP < 1:
-        exit('[Trainer]: Too few Pokemon in team')
-      if self.nP > 6:
-        exit('[Trainer]: Too many Pokemon in team')
       self.pokemon = []
       for iP in range(self.nP):
-        tempPokemon = Pokemon.Pokemon(team[iP])
-        self.pokemon.append(tempPokemon)
+        self.pokemon.append(Pokemon.Pokemon(team[iP]))
       
     else:
       self.setState(state)
   
   def setNextAction(self, action):
-    switch = action[0]
-    move = action[1]
-    
     if self.nextActionSet:
       exit('[setNextMove]: Move already set!')
-    if switch < 0 or switch > self.nP or move < 0 or move > self.pokemon[self.cP].nM:
+    if action < 0 or action > 2:
       exit('[setNextMove]: Illegal move set by Trainer ' + self.name + '!')
     
-    if switch == 0 and move == 0: # Struggle
-      self.nextSwitch = switch
-      self.nextMove = move
-      self.nextActionSet = True
-    elif switch > 0 and switch <= self.nP: # Switch
-      self.nextSwitch = switch
-      self.nextMove = 0
-      self.nextActionSet = True
-    elif move > 0 and move <= self.pokemon[self.cP].nM: # Move
-      self.nextSwitch = 0
-      self.nextMove = move
-      self.nextActionSet = True
+    self.nextMove = action
+    self.nextActionSet = True
   
   def setState(self, state):
-    self.mAttack = state[0]
-    self.mDefense = state[1]
-    self.mSpecial = state[2]
-    self.mSpeed = state[3]
-    self.mAccuracy = state[4]
-    self.mEvasion = state[5]
+    self.statMods = state[0]
     
-    self.cP = state[6]
+    self.mAttack = self.statMods[1]
+    self.mDefense = self.statMods[2]
     
-    self.nP = state[7]
     self.pokemon = []
     for iP in range(self.nP):
-      tempPokemon = Pokemon.Pokemon(self.team[iP], state[8][iP])
+      tempPokemon = Pokemon.Pokemon(self.team[iP], state[1][iP])
       self.pokemon.append(tempPokemon)
   
   def getState(self):
-    # Put everything in tempState and return it
     tempState = []
     
-    tempState.append(self.mAttack)
-    tempState.append(self.mDefense)
-    tempState.append(self.mSpecial)
-    tempState.append(self.mSpeed)
-    tempState.append(self.mAccuracy)
-    tempState.append(self.mEvasion)
-    
-    tempState.append(self.cP)
-    
-    tempState.append(self.nP)
+    tempState.append(self.statMods)
     
     tempPokemonState = []
     for iP in range(self.nP):
@@ -114,19 +84,26 @@ class Trainer:
     
     tempInput = np.append(tempInput, self.mAttack / 12)
     tempInput = np.append(tempInput, self.mDefense / 12)
-    tempInput = np.append(tempInput, self.mSpecial / 12)
-    tempInput = np.append(tempInput, self.mSpeed / 12)
-    tempInput = np.append(tempInput, self.mAccuracy / 12)
-    tempInput = np.append(tempInput, self.mEvasion / 12)
     
-    tempInput = np.append(tempInput, self.pokemon[self.cP].getInput())
+    tempInput = np.append(tempInput, self.pokemon[self.cP - 1].getInput())
     
     for iP in range(self.nP):
-      if iP == self.cP:
+      if iP == self.cP - 1:
         continue
       tempInput = np.append(tempInput, self.pokemon[iP].getInput())
     
     return tempInput
+  
+  def modifyStat(self, stat, modifier):
+    if self.statMods[stat] <= 0:
+      return False
+    
+    self.statMods[stat] += modifier
+    
+    self.mAttack = self.statMods[1]
+    self.mDefense = self.statMods[2]
+    
+    return True
   
   def resetNextAction(self):
     self.nextActionSet = False

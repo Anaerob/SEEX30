@@ -1,4 +1,6 @@
 __pycache__
 Analyze/
 Results/
+Versioner/
 test.py
+plot.py

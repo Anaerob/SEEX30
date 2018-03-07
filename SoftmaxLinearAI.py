@@ -1,14 +1,15 @@
 import numpy as np
 
 import Battle
+import Constants as c
 
 class AI:
   def __init__(self, weights = None):
     self.learningRate = 0.05
-    self.temperature
+    self.temperature = 1
     
     if weights is None:
-      self.weights = np.zeros((2, 10)) # scenario 1: 10 in, 2 out
+      self.weights = np.zeros((c.nOutputs, c.nInputs)) # scenario 1: 10 in, 2 out
     else:
       self.weights = weights
   

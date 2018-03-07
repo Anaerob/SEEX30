@@ -1,50 +1,37 @@
 import numpy as np
 import time
 
-import AI
 import Battle
 import Constants as c
-import User
+import SoftmaxLinearAI
 
-nBattles = 1
+# Load weights
+weightsRedFile = open('weightsRed.txt', 'r')
 
-startTime = time.time()
+weightsRed = []
+for i in range(c.nOutputs):
+  temp = []
+  for j in range(c.nInputs):
+    temp.append(float(weightsRedFile.readline()))
+  weightsRed.append(temp)
+
+weightsRed = np.array(weightsRed)
 
 # Define teams
-blueTeam = c.t2
-redTeam = c.t1
+greenTeam = c.team1
+redTeam = c.team2
+blueTeam = c.team3
 
-# Create AI or User
-blueAI = AI.AI(blueTeam, redTeam)
-redAI = AI.AI(redTeam, blueTeam)
+# Create AI
+greenAI = SoftmaxLinearAI.AI()
+redAI = SoftmaxLinearAI.AI(weightsRed)
+blueAI = SoftmaxLinearAI.AI()
 
-# Initialize win counter
-blueWins = 0
-redWins = 0
+# Run a battle to see the performance of the AI.
+battle = Battle.Battle(redTeam, redTeam, True)
+while battle.running:
+  battle.white.setNextAction(redAI.getAction(battle.getInput(c.amWhite), 0.01))
+  battle.black.setNextAction(redAI.getAction(battle.getInput(c.amBlack), 0.01))
+  battle.progress()
 
-
-# Play many battles
-for iBattles in range(0, nBattles):
-  
-  # Initialize each battle
-  battle = Battle.Battle(blueTeam, redTeam, True)
-  battle.printSelf()
-  # Run each battle
-  while battle.running:
-    action = blueAI.getAction(battle.getState(c.blue))
-    battle.blue.setNextAction(action)
-    action = redAI.getAction(battle.getState(c.red))
-    battle.red.setNextAction(action)
-    battle.progress()
-    battle.printSelf()
-  
-  # Count the winner
-  if battle.winner == 0:
-    blueWins += 1
-    print('Trainer Blue wins!')
-  if battle.winner == 1:
-    redWins += 1
-    print('Trainer Red wins!')
-
-print('Runtime: %d seconds' % (time.time() - startTime))
 #
