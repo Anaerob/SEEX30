@@ -68,10 +68,10 @@ class Battle:
   
   def progress(self):
     if self.printMe:
-      print('Round ' + str(self.round) + '!')
+      print('Round ' + str(self.round + 1) + '!')
     
     # For both trainers
-    for iT in range(0, 2):
+    for iT in range(2):
       
       # Check if an action has been chosen
       if not self.trainers[iT].nextActionSet:
@@ -109,8 +109,8 @@ class Battle:
       self.useMove((firstTrainer + 1) % 2)
       self.trainers[(firstTrainer + 1) % 2].resetNextAction()
     
-    # Check if either pokemon fainted
-    for iT in range(0, 2):
+    # Check if either pokemon fainted, proclaim victor (0: white, 1: black)
+    for iT in range(2):
       if self.trainers[iT].pokemon[self.trainers[iT].cP - 1].cHP <= 0:
         self.running = False
         self.winner = (iT + 1) % 2

@@ -3,6 +3,7 @@ import time
 
 import Battle
 import Constants as c
+import MonteCarloTreeSearchAI
 import SoftmaxLinearAI
 
 # Load weights
@@ -24,14 +25,15 @@ blueTeam = c.team3
 
 # Create AI
 greenAI = SoftmaxLinearAI.AI()
-redAI = SoftmaxLinearAI.AI(weightsRed)
+redSLAI = SoftmaxLinearAI.AI(weightsRed)
+redMCTSAI = MonteCarloTreeSearchAI.AI(redTeam, redTeam, 1000)
 blueAI = SoftmaxLinearAI.AI()
 
 # Run a battle to see the performance of the AI.
 battle = Battle.Battle(redTeam, redTeam, True)
 while battle.running:
-  battle.white.setNextAction(redAI.getAction(battle.getInput(c.amWhite), 0.01))
-  battle.black.setNextAction(redAI.getAction(battle.getInput(c.amBlack), 0.01))
+  battle.white.setNextAction(redSLAI.getAction(battle.getInput(c.amWhite)))
+  battle.black.setNextAction(redMCTSAI.getAction(battle.getState(c.amBlack)))
   battle.progress()
 
 #
