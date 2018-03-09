@@ -4,4 +4,4 @@ Plots/
 Results/
 Versioner/
 test.py
-plot.py
+plotWeights.py
