@@ -3,9 +3,9 @@ import numpy as np
 import Constants as c
 
 class AI:
-  def __init__(self, weights = None):
-    self.learningRate = 0.1
-    self.temperature = 0.1
+  def __init__(self, learningRate, temperature, weights = None):
+    self.learningRate = learningRate
+    self.temperature = temperature
     
     if weights is None:
       self.weights = np.zeros((c.nOutputs, c.nInputs)) # scenario 1: 10 in, 2 out
@@ -49,11 +49,11 @@ class AI:
       choice = np.random.choice(actions, p = policy)
     
     # Don't choose illegal moves
-    if input[3] == 0 and input[4] == 0:
+    if input[3] == 1 and input[4] == 1:
       choice = 0
-    elif input[4] == 0:
+    elif input[4] == 1:
       choice = 1
-    elif input[3] == 0:
+    elif input[3] == 1:
       choice = 2
     
     return choice

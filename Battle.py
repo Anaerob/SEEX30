@@ -20,11 +20,9 @@ class Battle:
       self.winner = -1
       
       # Initialize trainers White and Black
-      self.white = Trainer.Trainer('White', self.whiteTeam)
-      self.black = Trainer.Trainer('Black', self.blackTeam)
-      
-      # Put trainers in a list to avoid double code
-      self.trainers = [self.white, self.black]
+      self.trainers = [
+        Trainer.Trainer('White', self.whiteTeam),
+        Trainer.Trainer('Black', self.blackTeam)]
       
     else:
       self.setState(state)
@@ -34,9 +32,9 @@ class Battle:
     self.running = state[1]
     self.winner = state[2]
     
-    self.white = Trainer.Trainer('White', self.whiteTeam, state[3])
-    self.black = Trainer.Trainer('Black', self.blackTeam, state[4])
-    self.trainers = [self.white, self.black]
+    self.trainers = [
+      Trainer.Trainer('White', self.whiteTeam, state[3]),
+      Trainer.Trainer('Black', self.blackTeam, state[4])]
   
   def getState(self, isWhite):
     tempState = []
@@ -46,25 +44,25 @@ class Battle:
     tempState.append(self.winner)
     
     if isWhite:
-      tempState.append(self.white.getState())
-      tempState.append(self.black.getState())
+      tempState.append(self.trainers[0].getState())
+      tempState.append(self.trainers[1].getState())
     else:
-      tempState.append(self.black.getState())
-      tempState.append(self.white.getState())
+      tempState.append(self.trainers[1].getState())
+      tempState.append(self.trainers[0].getState())
     
     return tempState
   
-  def getInput(self, isWhite):
-    tempInput = np.array([])
+  def getFeatures(self, isWhite):
+    tempFeatures = np.array([])
     
     if isWhite:
-      tempInput = np.append(tempInput, self.white.getInput())
-      tempInput = np.append(tempInput, self.black.getInput())
+      tempFeatures = np.append(tempFeatures, self.trainers[0].getFeatures())
+      tempFeatures = np.append(tempFeatures, self.trainers[1].getFeatures())
     else:
-      tempInput = np.append(tempInput, self.black.getInput())
-      tempInput = np.append(tempInput, self.white.getInput())
+      tempFeatures = np.append(tempFeatures, self.trainers[1].getFeatures())
+      tempFeatures = np.append(tempFeatures, self.trainers[0].getFeatures())
     
-    return tempInput
+    return tempFeatures
   
   def progress(self):
     if self.printMe:
@@ -85,9 +83,9 @@ class Battle:
     
     # Determine who strikes first based on speed (coin toss if speed is equal)
     firstTrainer = 0
-    if self.trainers[0].pokemon[self.trainers[0].cP - 1].speed < self.trainers[1].pokemon[self.trainers[1].cP - 1].speed:
+    if self.trainers[0].pokemon[self.trainers[0].cP - 1].stats['speed'] < self.trainers[1].pokemon[self.trainers[1].cP - 1].stats['speed']:
       firstTrainer = 1
-    elif self.trainers[0].pokemon[self.trainers[0].cP - 1].speed == self.trainers[1].pokemon[self.trainers[1].cP - 1].speed:
+    elif self.trainers[0].pokemon[self.trainers[0].cP - 1].stats['speed'] == self.trainers[1].pokemon[self.trainers[1].cP - 1].stats['speed']:
       # Returns 0 or 1
       if np.random.randint(0, 2) == 0:
         firstTrainer = 1
@@ -125,7 +123,7 @@ class Battle:
     self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].cPP -= 1
     
     # Check if move misses (correctly implements the 1/256 miss bug)
-    if np.random.randint(0, 256) >= self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].accuracy:
+    if np.random.randint(0, 256) >= self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].stats['accuracy']:
       if self.printMe:
         print('  ' +
           self.trainers[t].name + '\'s ' +
@@ -134,15 +132,15 @@ class Battle:
     else:
       
       # If the move is a damaging move, calculate and deduct damage
-      if self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].power != 0:
+      if self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].stats['power'] != 0:
         
         # If the move is a critical hit, calculate damage with double level and no modifiers
-        if np.random.randint(0, 256) < np.floor(self.trainers[t].pokemon[self.trainers[t].cP - 1].speed / 2):
+        if np.random.randint(0, 256) < np.floor(self.trainers[t].pokemon[self.trainers[t].cP - 1].base['speed'] / 2):
           damage = self.calculateDamage(
             2 * self.trainers[t].pokemon[self.trainers[t].cP - 1].level,
-            self.trainers[t].pokemon[self.trainers[t].cP - 1].attack,
-            self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].power,
-            self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP - 1].defense)
+            self.trainers[t].pokemon[self.trainers[t].cP - 1].stats['attack'],
+            self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].stats['power'],
+            self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP - 1].stats['defense'])
           self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP - 1].cHP -= int(damage)
           if self.printMe:
             print('  ' +
@@ -155,12 +153,12 @@ class Battle:
           damage = self.calculateDamage(
             self.trainers[t].pokemon[self.trainers[t].cP - 1].level,
             np.floor(
-              c.statModifiers[self.trainers[t].mAttack] *
-              self.trainers[t].pokemon[self.trainers[t].cP - 1].attack / 100),
-            self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].power,
+              c.statModifiers[self.trainers[t].statMods['attack']] *
+              self.trainers[t].pokemon[self.trainers[t].cP - 1].stats['attack'] / 100),
+            self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].stats['power'],
             np.floor(
-              c.statModifiers[self.trainers[(t + 1) % 2].mDefense] *
-              self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP - 1].defense / 100))
+              c.statModifiers[self.trainers[(t + 1) % 2].statMods['defense']] *
+              self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP - 1].stats['defense'] / 100))
           self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP - 1].cHP -= int(damage)
           if self.printMe:
             print('  ' +
@@ -169,19 +167,21 @@ class Battle:
               ' did ' + str(damage) + ' damage!')
       
       # If the move is a stat modifying move, modify the stat
-      if self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].modifiers[0] != 0:
+      if self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].modifiers['chance'] != 0:
         
         # Loop over all stats (1: Attack, 2: Defense, 3: Special, 4: Speed, 5: Accuracy, 6: Evasion)
-        for iStat in range(1, 3):
+        s = ['attack', 'defense']
+        for iStat in range(2):
           
           # If the move decreases iStat
-          if self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].modifiers[iStat] < 0:
+          if self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].modifiers[s[iStat]] < 0:
             
             # Try decreasing it (returns True if success, False if at minimum)
-            if self.printMe and self.trainers[(t + 1) % 2].modifyStat(iStat, self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].modifiers[iStat]):
-              print('  ' +
-                self.trainers[(t + 1) % 2].name + '\'s ' +
-                self.trainers[(t + 1) % 2].pokemon[self.trainers[t].cP - 1].name + '\'s stat was reduced!')
+            if self.trainers[(t + 1) % 2].modifyStat(s[iStat], self.trainers[t].pokemon[self.trainers[t].cP - 1].moves[self.trainers[t].nextMove].modifiers[s[iStat]]):
+              if self.printMe:
+                print('  ' +
+                  self.trainers[(t + 1) % 2].name + '\'s ' +
+                  self.trainers[(t + 1) % 2].pokemon[self.trainers[t].cP - 1].name + '\'s stat was reduced!')
               
             elif self.printMe:
               print('  ' +
@@ -199,12 +199,12 @@ class Battle:
     rand = np.random.randint(217, 256)
     damage = np.floor(unmodified * rand / 255)
     
-    return damage
+    return int(damage)
   
   def printSelf(self):
     print()
-    self.white.printSelf()
+    self.trainers[0].printSelf()
     print()
-    self.black.printSelf()
+    self.trainers[1].printSelf()
     print()
 #

@@ -1,5 +1,3 @@
-import numpy as np
-
 amWhite = True
 amBlack = False
 
@@ -7,12 +5,12 @@ nOutputs = 2
 nInputs = 10
 
 # teams
-team1 = np.array([1])
-team2 = np.array([4])
-team3 = np.array([7])
+team1 = [1]
+team2 = [4]
+team3 = [7]
 
 # Status modifier factor (followed by integer division by 100)
-statModifiers = np.array([25, 28, 33, 40, 50, 66, 100, 150, 200, 250, 300, 350, 400]) # [6] = 100, tot [0] to [12], 13 elements
+statModifiers = [25, 28, 33, 40, 50, 66, 100, 150, 200, 250, 300, 350, 400] # [6] = 100, tot [0] to [12], 13 elements
 
 ### Pokemon
 
@@ -23,7 +21,7 @@ PN = ['0',
   'Squirtle', '8', '9']
 
 # Base Stats [0: HP, 1: Attack, 2: Defense, 3: Special, 4: Speed]
-PBS = np.array([[0, 0, 0, 0, 0],
+PBS = [[0, 0, 0, 0, 0],
   [45, 49, 49, 65, 45], # bulbasaur
   [0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0],
@@ -32,10 +30,10 @@ PBS = np.array([[0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0],
   [44, 48, 65, 50, 43], # squirtle
   [0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0]])
+  [0, 0, 0, 0, 0]]
 
 # Moves [Move 1, Move 2, Move 3, Move 4]
-PM = np.array([[0, 0, 0, 0],
+PM = [[0, 0, 0, 0],
   [33, 45, 0, 0], # bulbasaur
   [0, 0, 0, 0],
   [0, 0, 0, 0],
@@ -44,7 +42,7 @@ PM = np.array([[0, 0, 0, 0],
   [0, 0, 0, 0],
   [33, 39, 0, 0], # squirtle
   [0, 0, 0, 0],
-  [0, 0, 0, 0]])
+  [0, 0, 0, 0]]
 
 # Moves
 
@@ -217,7 +215,7 @@ MN = ['', # 0
   'Struggle'] # 165
 
 # Stats [Power, Accuracy, PP]
-MS = np.array([[0, 0, 0], # 0
+MS = [[0, 0, 0], # 0
   [0, 0, 0],
   [0, 0, 0],
   [0, 0, 0],
@@ -382,10 +380,10 @@ MS = np.array([[0, 0, 0], # 0
   [0, 0, 0],
   [0, 0, 0],
   [0, 0, 0],
-  [50, 256, 100]]) # 165: Struggle
+  [50, 256, 100]] # 165: Struggle
 
 # modifiers [0: chance, 1: attack, 2: defense, 3: special, 4: speed]
-MM = np.array([[0, 0, 0, 0, 0], # 0
+MM = [[0, 0, 0, 0, 0], # 0
   [0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0],
@@ -550,6 +548,6 @@ MM = np.array([[0, 0, 0, 0, 0], # 0
   [0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0]]) # 165: Struggle
+  [0, 0, 0, 0, 0]] # 165: Struggle
 
 #

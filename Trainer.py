@@ -33,11 +33,9 @@ class Trainer:
     
     if state is None:
       # Stat modifiers (only for currently active Pokemon)
-      self.statMods = np.array([6, 6, 6])
-      
-      # For clarity in code
-      self.mAttack = self.statMods[1]
-      self.mDefense = self.statMods[2]
+      self.statMods = {
+        'attack': 6,
+        'defense': 6}
       
       # Pokemon
       self.pokemon = []
@@ -57,20 +55,19 @@ class Trainer:
     self.nextActionSet = True
   
   def setState(self, state):
-    self.statMods = state[0]
-    
-    self.mAttack = self.statMods[1]
-    self.mDefense = self.statMods[2]
+    self.statMods = {
+      'attack': state[0],
+      'defense': state[1]}
     
     self.pokemon = []
     for iP in range(self.nP):
-      tempPokemon = Pokemon.Pokemon(self.team[iP], state[1][iP])
-      self.pokemon.append(tempPokemon)
+      self.pokemon.append(Pokemon.Pokemon(self.team[iP], state[2][iP]))
   
   def getState(self):
     tempState = []
     
-    tempState.append(self.statMods)
+    tempState.append(self.statMods['attack'])
+    tempState.append(self.statMods['defense'])
     
     tempPokemonState = []
     for iP in range(self.nP):
@@ -79,29 +76,31 @@ class Trainer:
     
     return tempState
   
-  def getInput(self):
-    tempInput = np.array([])
+  def getFeatures(self):
+    tempFeatures = np.array([])
     
-    tempInput = np.append(tempInput, self.mAttack / 12)
-    tempInput = np.append(tempInput, self.mDefense / 12)
+    tempFeatures = np.append(tempFeatures, 1 - self.statMods['attack'] / 6)
+    tempFeatures = np.append(tempFeatures, 1 - self.statMods['defense'] / 6)
     
-    tempInput = np.append(tempInput, self.pokemon[self.cP - 1].getInput())
+    tempFeatures = np.append(tempFeatures, self.pokemon[self.cP - 1].getFeatures())
     
     for iP in range(self.nP):
       if iP == self.cP - 1:
         continue
-      tempInput = np.append(tempInput, self.pokemon[iP].getInput())
+      tempFeatures = np.append(tempFeatures, self.pokemon[iP].getFeatures())
     
-    return tempInput
+    return tempFeatures
   
-  def modifyStat(self, stat, modifier):
-    if self.statMods[stat] <= 0:
+  def modifyStat(self, sStat, modifier):
+    # Check if the stat can be modified further
+    if self.statMods[sStat] <= 0:
       return False
     
-    self.statMods[stat] += modifier
+    self.statMods[sStat] += modifier
     
-    self.mAttack = self.statMods[1]
-    self.mDefense = self.statMods[2]
+    # Make sure the stat isn't modified too many steps
+    if self.statMods[sStat] < 0:
+      self.statMods[sStat] = 0
     
     return True
   
@@ -112,6 +111,6 @@ class Trainer:
   
   def printSelf(self):
     print('Trainer ' + self.name + ' has ' + str(self.nP) + ' Pokemon:')
-    for iP in range (self.nP):
+    for iP in range(self.nP):
       self.pokemon[iP].printSelf()
 #
