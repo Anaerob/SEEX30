@@ -89,8 +89,8 @@ class AI:
         wMoves.append(wChoice)
         bMoves.append(bChoice)
         
-        sim.white.setNextAction(wChoice)
-        sim.black.setNextAction(bChoice)
+        sim.trainers[0].setNextAction(wChoice)
+        sim.trainers[1].setNextAction(bChoice)
         sim.progress()
       
       # Update and extend the search tree

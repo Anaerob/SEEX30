@@ -21,9 +21,9 @@ redMCTSAI = MonteCarloTreeSearchAI.AI(redTeam, redTeam, 1000)
 # Run a battle to see the performance of the AI.
 battle = Battle.Battle(redTeam, redTeam, True)
 while battle.running:
-  battle.white.setNextAction(redSLAI.getAction(battle.getInput(c.amWhite)))
-  battle.black.setNextAction(redMCTSAI.getAction(battle.getState(c.amBlack)))
+  battle.trainers[0].setNextAction(redSLAI.getAction(battle.getFeatures(c.amWhite)))
+  battle.trainers[1].setNextAction(redMCTSAI.getAction(battle.getState(c.amBlack)))
   battle.progress()
-  print(battle.getInput(c.amWhite))
+  #print(battle.getFeatures(c.amWhite))
 
 #

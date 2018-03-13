@@ -4,6 +4,8 @@ amBlack = False
 nOutputs = 2
 nInputs = 10
 
+actions = [1, 2]
+
 # teams
 team1 = [1]
 team2 = [4]
