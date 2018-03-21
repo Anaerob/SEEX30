@@ -14,9 +14,6 @@ class AI:
     self.blackTeam = blackTeam
   
   def getAction(self, state):
-    # List of all actions
-    actions = [1, 2]
-    
     # Initialize the dictionaries
     wPlayed = {}
     wWins = {}
@@ -36,12 +33,12 @@ class AI:
         wQ = np.array([])
         bQ = np.array([])
         
-        for iAction in range(len(actions)):
+        for iAction in range(len(c.actions)):
           # Add an action to the move list
           wTry = list(wMoves)
-          wTry.append(actions[iAction])
+          wTry.append(c.actions[iAction])
           bTry = list(bMoves)
-          bTry.append(actions[iAction])
+          bTry.append(c.actions[iAction])
           
           # Build a string used to check dictionary
           wString = ''
@@ -67,24 +64,32 @@ class AI:
             bQ = np.append(bQ, 1.1)
         
         # Epsilon-greedy with softmax as simulation policy
-        if np.random.random() > self.epsilon:
-          # Use a very hard Softmax to choose action - useful if two actions are considered equal!
-          wPolicy = np.exp(wQ / self.temperature) / np.sum(np.exp(wQ / self.temperature), axis = 0)
-          wChoice = np.random.choice(actions, p = wPolicy)
-          
-          if self.printMe:
-            print('Q: ' + str(wQ) + ', Policy: ' + str(wPolicy) + ', Choice: ' + str(wChoice))
-          
-        else:
-          wChoice = actions[np.random.randint(len(actions))]
+        if np.random.random() < self.epsilon:
+          wQ[0] = 1
+          wQ[1] = 1
+        
+        # Set probability of choosing zero PP move to zero
+        # We only need to check stat modifier in scenario 1
+        if sim.trainers[0].pokemon[sim.trainers[0].cP - 1].moves[2].cPP == 0:
+          wQ[1] = -float('inf')
+        
+        # Use a very hard Softmax to choose action - useful if two actions are considered equal!
+        wPolicy = np.exp(wQ / self.temperature) / np.sum(np.exp(wQ / self.temperature), axis = 0)
+        wChoice = np.random.choice(c.actions, p = wPolicy)
+        
+        if self.printMe:
+          print('Q: ' + str(wQ) + ', Policy: ' + str(wPolicy) + ', Choice: ' + str(wChoice))
         
         # Same as for white
-        if np.random.random() > self.epsilon:
-          bPolicy = np.exp(bQ / self.temperature) / np.sum(np.exp(bQ / self.temperature), axis = 0)
-          bChoice = np.random.choice(actions, p = bPolicy)
-          
-        else:
-          bChoice = actions[np.random.randint(len(actions))]
+        if np.random.random() < self.epsilon:
+          bQ[0] = 1
+          bQ[1] = 1
+        
+        if sim.trainers[1].pokemon[sim.trainers[1].cP - 1].moves[2].cPP == 0:
+          bQ[1] = -float('inf')
+        
+        bPolicy = np.exp(bQ / self.temperature) / np.sum(np.exp(bQ / self.temperature), axis = 0)
+        bChoice = np.random.choice(c.actions, p = bPolicy)
         
         wMoves.append(wChoice)
         bMoves.append(bChoice)
@@ -119,8 +124,14 @@ class AI:
     
     # Use a very hard Softmax to choose action
     Q = np.array([wWins['1'] / wPlayed['1'], wWins['2'] / wPlayed['2']])
+    
+    # Final PP check
+    sim = Battle.Battle(self.whiteTeam, self.blackTeam, False, state)
+    if sim.trainers[0].pokemon[sim.trainers[0].cP - 1].moves[2].cPP == 0:
+      Q[1] = -float('inf')
+    
     policy = np.exp(Q / self.temperature) / np.sum(np.exp(Q / self.temperature), axis = 0)
-    choice = np.random.choice(actions, p = policy)
+    choice = np.random.choice(c.actions, p = policy)
     
     return choice
 #
