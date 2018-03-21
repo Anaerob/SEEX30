@@ -15,6 +15,7 @@ class Move:
     if state is None:
       # Current PP
       self.cPP = c.MS[self.index][2]
+      
     else:
       self.setState(state)
   

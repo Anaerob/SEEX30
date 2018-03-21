@@ -10,7 +10,6 @@ class Trainer:
     
     self.name = name
     
-    ## State variables in the general case but fixed in battle scenarios:
     # Number of Pokemon
     self.nP = 6
     
@@ -56,19 +55,20 @@ class Trainer:
   def setState(self, state):
     self.cP = state[0]
     
-    self.statMods = {
-      'attack': state[0],
-      'defense': state[1]}
+    self.recharge = state[1]
+    self.specialMod = state[2]
+    self.speedMod = state[2]
     
     self.pokemon = []
     for iP in range(self.nP):
-      self.pokemon.append(Pokemon.Pokemon(c.team[iP], state[2][iP]))
+      self.pokemon.append(Pokemon.Pokemon(c.team[iP], state[3][iP]))
   
   def getState(self):
-    tempState = []
+    tempState = [self.cP]
     
-    tempState.append(self.statMods['attack'])
-    tempState.append(self.statMods['defense'])
+    tempState.append(self.recharge)
+    tempState.append(self.specialMod)
+    tempState.append(self.speedMod)
     
     tempPokemonState = []
     for iP in range(self.nP):
@@ -80,8 +80,9 @@ class Trainer:
   def getFeatures(self):
     tempFeatures = np.array([])
     
-    tempFeatures = np.append(tempFeatures, 1 - self.statMods['attack'] / 6)
-    tempFeatures = np.append(tempFeatures, 1 - self.statMods['defense'] / 6)
+    tempFeatures = np.append(tempFeatures, int(self.recharge))
+    tempFeatures = np.append(tempFeatures, 1 - self.specialMod / 6)
+    tempFeatures = np.append(tempFeatures, self.speedMod / 6 - 1)
     
     tempFeatures = np.append(tempFeatures, self.pokemon[self.cP - 1].getFeatures())
     
@@ -92,26 +93,13 @@ class Trainer:
     
     return tempFeatures
   
-  def modifyStat(self, sStat, modifier):
-    # Check if the stat can be modified further
-    if self.statMods[sStat] <= 0:
-      return False
-    
-    self.statMods[sStat] += modifier
-    
-    # Make sure the stat isn't modified too many steps
-    if self.statMods[sStat] < 0:
-      self.statMods[sStat] = 0
-    
-    return True
-  
   def resetNextAction(self):
     self.nextActionSet = False
     self.nextSwitch = 0
     self.nextMove = 0
   
   def printSelf(self):
-    print('Trainer ' + self.name + ' has ' + str(self.nP) + ' Pokemon:')
+    print('Trainer ' + self.name + '\'s Pokemon:')
     for iP in range(self.nP):
       self.pokemon[iP].printSelf()
 #

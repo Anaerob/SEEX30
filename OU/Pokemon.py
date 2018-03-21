@@ -11,8 +11,6 @@ class Pokemon:
     self.index = index
     self.name = c.PN[self.index]
     
-    ## State variables in the general case but fixed in battle scenarios:
-    
     # Number of moves
     self.nM = 4
     
@@ -22,6 +20,7 @@ class Pokemon:
       # Current HP
       self.cHP = c.PS[self.index][0]
       
+      # Status conditions
       self.frozen = False
       self.paralyzed = False
       self.sleeping = False
@@ -29,11 +28,9 @@ class Pokemon:
       # self.moves = [Struggle, Move1, Move2, Move3, Move4]
       self.moves = [Move.Move(165)]
       
-      # Get predetermined move set from Constants
-      moveSet = c.PM[self.index]
-      
+      # Get moves using predetermined move set from Constants
       for iM in range(self.nM):
-        self.moves.append(Move.Move(moveSet[iM]))
+        self.moves.append(Move.Move(c.PM[self.index][iM]))
       
     else:
       self.setState(state)
@@ -41,20 +38,24 @@ class Pokemon:
   def setState(self, state):
     self.cHP = state[0]
     
+    self.frozen = state[1]
+    self.paralyzed = state[2]
+    self.sleeping = state[3]
+    
     self.moves = [Move.Move(165)]
     
-    moveSet = c.PM[self.index]
-    
     for iM in range(self.nM):
-      self.moves.append(Move.Move(moveSet[iM], state[1][iM]))
+      self.moves.append(Move.Move(c.PM[self.index][iM], state[4][iM]))
     
   def getState(self):
-    tempState = []
+    tempState = [self.cHP]
     
-    tempState.append(self.cHP)
+    tempState.append(self.frozen)
+    tempState.append(self.paralyzed)
+    tempState.append(self.sleeping)
     
     tempMoveState = []
-    for iM in range(self.nM): 
+    for iM in range(self.nM):
       tempMoveState.append(self.moves[iM + 1].getState())
     tempState.append(tempMoveState)
     
@@ -62,6 +63,10 @@ class Pokemon:
   
   def getFeatures(self):
     tempFeatures = np.array([self.cHP / c.PS[self.index][0]])
+    
+    tempFeatures = np.append(tempFeatures, int(self.frozen))
+    tempFeatures = np.append(tempFeatures, int(self.paralyzed))
+    tempFeatures = np.append(tempFeatures, int(self.sleeping))
     
     for iM in range(self.nM):
       tempFeatures = np.append(tempFeatures, self.moves[iM + 1].getFeatures())
@@ -71,7 +76,16 @@ class Pokemon:
   def printSelf(self):
     print(' ' + self.name + ':')
     print('  HP: ' + str(self.cHP) + ' / ' + str(c.PS[self.index][0]))
-    print('  Moves:')
-    for iM in range (1, self.nM + 1):
-      self.moves[iM].printSelf()
+    if self.cHP == 0:
+      print('  Fainted!')
+    else:
+      if self.frozen:
+        print('  Frozen!')
+      if self.paralyzed:
+        print('  Paralyzed!')
+      if self.sleeping:
+        print('  Sleeping!')
+      print('  Moves:')
+      for iM in range (1, self.nM + 1):
+        self.moves[iM].printSelf()
 #
