@@ -2,55 +2,44 @@ import numpy as np
 
 import Constants as c
 
+
 class AI:
-  def __init__(self, learningRate, temperature, weights = None):
-    self.learningRate = learningRate
-    self.temperature = temperature
     
-    if weights is None:
-      self.weights = np.zeros((c.nOutputs, c.nInputs))
-    else:
-      self.weights = weights
-  
-  def train(self, input, action, reward):
-    # baseline = np.sum(np.dot(self.weights, input))/2
     
-    # Linear combination of inputs and weights
-    output = np.dot(self.weights, input)
-    
-    self.weights[action - 1] += self.learningRate * (reward - output[action - 1]) * input
-  
-  def getAction(self, input, temperature = None):
-    # Linear combination of inputs and weights
-    output = np.dot(self.weights, input)
-    
-    # Set probability of choosing zero PP move to zero
-    # We only need to check stat modifier in scenario 1
-    if input[4] == 1:
-      output[1] = -float('inf')
-    
-    if temperature is None:
-      if self.temperature < 0.005:
-        # This is where softmax starts to blow up, use a hardmax instead
-        choice = c.actions[output.tolist().index(max(output))]
-      else:
-        # Softmax with default temperature to decide the policy probabilities
-        policy = np.exp(output / self.temperature) / np.sum(np.exp(output / self.temperature), axis = 0)
+    def __init__(self, learningRate, temperature, bias=None, weights=None):
         
-        # Choose based on policy
-        choice = np.random.choice(c.actions, p = policy)
-      
-    elif temperature < 0.005:
-      # This is where softmax starts to blow up, use a hardmax instead
-      choice = c.actions[output.tolist().index(max(output))]
-      
-    else:
-      # Softmax with default temperature to decide the policy probabilities
-      policy = np.exp(output / temperature) / np.sum(np.exp(output / temperature), axis = 0)
-      
-      # Choose based on policy
-      choice = np.random.choice(c.actions, p = policy)
+        self.learningRate = learningRate
+        self.temperature = temperature
+        self.bias = np.zeros(c.nOutputs)
+        if bias is not None:
+            self.bias = bias
+        self.weights = np.zeros((c.nOutputs, c.nInputs))
+        if weights is not None:
+            self.weights = weights
     
-    return choice
-  
+    def train(self, input, action, reward):
+        
+        output = np.dot(self.weights, input) + self.bias
+        self.bias[action - 1] += self.learningRate * (reward - output[action - 1])
+        self.weights[action - 1] += self.learningRate * (reward - output[action - 1]) * input
+    
+    def getAction(self, input):
+        
+        output = np.dot(self.weights, input) + self.bias
+        
+        # Set probability of choosing zero PP move to zero
+        if input[1] == 1:
+            output[1] = -float('inf')
+            
+            # Punish this choice heavily
+            self.train(input, 2, -10)
+        
+        # Use softmax to choose action unless temperature is too low
+        if self.temperature < 0.01:
+            choice = c.actions[output.tolist().index(max(output))]
+        else:
+            policy = np.exp(output / self.temperature) / np.sum(np.exp(output / self.temperature), axis = 0)
+            choice = np.random.choice(c.actions, p = policy)
+        return choice
+
 #
