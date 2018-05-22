@@ -3,15 +3,13 @@ amBlack = True
 amWhite = False
 
 # Parameters
-nOutputs = 2
-nInputs = 10
 actions = [1, 2]
+nInputs = 10
+nOutputs = 2
+statMods = [25, 28, 33, 40, 50, 66, 100, 150, 200, 250, 300, 350, 400]
 team1 = 1
 team2 = 4
 team3 = 7
-
-# Status modifier factor
-statMods = [25, 28, 33, 40, 50, 66, 100, 150, 200, 250, 300, 350, 400]
 
 #
 # Pokemon
@@ -25,33 +23,33 @@ PN = ['0',
 
 # Base Stats [0: HP, 1: Attack, 2: Defense, 3: Special, 4: Speed]
 PBS = [[0, 0, 0, 0, 0],
-    [45, 49, 49, 65, 45], # bulbasaur
+    [45, 49, 49, 65, 45], # Bulbasaur
     [0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0],
-    [39, 52, 43, 50, 65], # charmander
+    [39, 52, 43, 50, 65], # Charmander
     [0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0],
-    [44, 48, 65, 50, 43]] # squirtle
+    [44, 48, 65, 50, 43]] # Squirtle
 
 # Stats [0: HP, 1: Attack, 2: Defense, 3: Special, 4: Speed]
 PS = [[0, 0, 0, 0, 0],
-    [19, 9, 9, 11, 9], # bulbasaur
+    [19, 9, 9, 11, 9], # Bulbasaur
     [0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0],
-    [18, 10, 9, 10, 11], # charmander
+    [18, 10, 9, 10, 11], # Charmander
     [0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0],
-    [19, 9, 11, 10, 9]] # squirtle
+    [19, 9, 11, 10, 9]] # Squirtle
 
 # Moves [Move 1, Move 2, Move 3, Move 4]
 PM = [[0, 0],
-    [33, 45], # bulbasaur
+    [33, 45], # Bulbasaur
     [0, 0],
     [0, 0],
-    [10, 45], # charmander
+    [10, 45], # Charmander
     [0, 0],
     [0, 0],
-    [33, 39]] # squirtle
+    [33, 39]] # Squirtle
 
 #
 # Moves
@@ -105,7 +103,7 @@ MN = ['', # 0
     '',
     'Growl']
 
-# Stats [0: power, 1: accuracy, 2: PP]
+# Stats [0: Power, 1: Accuracy, 2: PP]
 MS = [[0, 0, 0], # 0
     [0, 0, 0],
     [0, 0, 0],
@@ -153,7 +151,7 @@ MS = [[0, 0, 0], # 0
     [0, 0, 0],
     [0, 255, 40]] # 45: Growl
 
-# Modifiers [0: chance, 1: attack, 2: defense, 3: special, 4: speed]
+# Modifiers [0: Chance, 1: Attack, 2: Defense, 3: Special, 4: Speed]
 MM = [[0, 0, 0, 0, 0], # 0
     [0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0],

@@ -24,7 +24,7 @@ class AI:
         wStrategyWins = {}
         for iSearch in range(self.search):
             
-            # Initialize and play the simulated game
+            # Initialize and play the simulated game from the given state
             sim = Game.Game(state)
             simStart = sim.round
             bTryingNow = ''

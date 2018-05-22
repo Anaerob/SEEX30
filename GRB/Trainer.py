@@ -24,10 +24,12 @@ class Trainer:
     
     def setNextAction(self, action):
         
+        # Make sure no illegal action is set
         if self.nextActionSet:
             exit('[Trainer.setNextMove()]: ' + self.name + ' move already set!')
         if action < 1 or action > 2:
             exit('[Trainer.setNextMove()]: Illegal move set by ' + self.name + '!')
+        
         self.nextAction = action
         self.nextActionSet = True
     
