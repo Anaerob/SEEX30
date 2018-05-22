@@ -17,9 +17,10 @@ class AI:
     
     def train(self, input, action, reward):
         
+        # Approximate the action value function Q using linear combination
         output = np.dot(self.weights, input) + self.bias
         
-        # Stochastic gradient descent
+        # Update the weights and biases using stochastic gradient descent
         self.bias[action] += self.learningRate * (reward - output[action])
         self.weights[action] += (self.learningRate
             * (reward - output[action]) * input)
@@ -27,12 +28,17 @@ class AI:
     def getAction(self, input):
         
         actions = [0, 1]
+        
+        # Approximate the action value function Q using linear combination
         output = np.dot(self.weights, input) + self.bias
         
-        # Use softmax to choose action unless temperature is too low
+        # If the specified temperature is too low,
+        # choose the action with maximum Q
         if self.temperature < 0.01:
             choice = actions[output.tolist().index(max(output))]
         else:
+            
+            # Choose action using a probabilistic softmax
             policy = (np.exp(output / self.temperature)
                 / np.sum(np.exp(output / self.temperature), axis = 0))
             choice = np.random.choice(actions, p = policy)

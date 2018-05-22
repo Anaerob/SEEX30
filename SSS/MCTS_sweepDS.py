@@ -16,7 +16,6 @@ def main():
     temperature = 0.2
     
     # Initialize
-    startTime = time.time()
     HCAI = []
     HC_string = ''
     game = Game.Game()
@@ -76,10 +75,10 @@ def main():
     print('Completed 100%')
     resultsStrategyFile.close()
     resultsTimeFile.close()
-    
-    PrintTime.printTime(time.time() - startTime)
 
 if __name__ == '__main__':
+    startTime = time.time()
     main()
+    PrintTime.printTime(time.time() - startTime)
 
 #

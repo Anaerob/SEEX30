@@ -16,7 +16,6 @@ def main():
     nPlotPoints = 1000
     
     # Initialize
-    startTime = time.time()
     AI = SoftmaxLinearAI.AI(learningRate, temperature)
     infoFile = open('SL_train_info.txt', 'w')
     infoFile.write(
@@ -109,10 +108,10 @@ def main():
         weightsSmoothFile.write(str(weightsSmooth[i]) + '\n')
     biasSmoothFile.close()
     weightsSmoothFile.close()
-    
-    PrintTime.printTime(time.time() - startTime)
-    
+
 if __name__ == '__main__':
+    startTime = time.time()
     main()
+    PrintTime.printTime(time.time() - startTime)
 
 #

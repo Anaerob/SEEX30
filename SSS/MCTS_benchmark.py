@@ -16,7 +16,6 @@ def main():
     temperature = 0.2
     
     # Initialize
-    startTime = time.time()
     MCTSAI = MonteCarloTreeSearchAI.AI(depth, epsilon, search, temperature)
     HCAI = []
     HC_string = ''
@@ -70,10 +69,10 @@ def main():
     resultsFile.write('# Win percentage: \n')
     resultsFile.write(str(100 * MCTSvHC / nGames) + '%\n\n')
     resultsFile.close()
-    
-    PrintTime.printTime(time.time() - startTime)
-    
+
 if __name__ == '__main__':
+    startTime = time.time()
     main()
+    PrintTime.printTime(time.time() - startTime)
 
 #

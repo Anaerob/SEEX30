@@ -14,7 +14,6 @@ def main():
     temperature = 0
     
     # Initialize
-    startTime = time.time()
     bias = Load.loadFloatArray('SL_bias_smooth', 2)
     weights = Load.loadFloatMatrix('SL_weights_smooth', 2, 2)
     SLAI = SoftmaxLinearAI.AI(learningRate, temperature, bias, weights)
@@ -64,10 +63,10 @@ def main():
     resultsFile.write('# Win percentage: \n')
     resultsFile.write(str(100 * SLvHC / nGames) + '%\n')
     resultsFile.close()
-    
-    PrintTime.printTime(time.time() - startTime)
 
 if __name__ == '__main__':
+    startTime = time.time()
     main()
+    PrintTime.printTime(time.time() - startTime)
 
 #
