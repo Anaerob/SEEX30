@@ -133,6 +133,9 @@ class Game:
                         print(self.trainers[iT].name + '\'s ' + self.trainers[iT].pokemon[self.trainers[iT].cP].name + ' fainted!')
                     self.forceSwitch[iT] = True
                     self.trainers[iT].rP -= 1
+                    self.trainers[iT].pokemon[self.trainers[iT].cP].frozen = False
+                    self.trainers[iT].pokemon[self.trainers[iT].cP].paralyzed = False
+                    self.trainers[iT].pokemon[self.trainers[iT].cP].sleeping = 0
             
             for iT in range(2):
                 if self.trainers[iT].rP <= 0:

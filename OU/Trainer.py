@@ -81,7 +81,7 @@ class Trainer:
             self.pokemon[self.cP].cHP = self.pokemon[self.cP].HP
         else:
             healed = damage
-        return damage
+        return healed
     
     def inflictDamage(self, damage, ignoreSub): # ADD IGNORE SUBSTITUTE INPUT?
         
