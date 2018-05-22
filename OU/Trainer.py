@@ -3,103 +3,108 @@ import numpy as np
 import Constants as c
 import Pokemon
 
+
 class Trainer:
-  def __init__(self, name, state = None):
     
-    ### Constants
     
-    self.name = name
+    def __init__(self, name, state = None):
+        
+        # Constants
+        self.name = name
+        
+        # State
+        self.cP = 1
+        self.rP = 6
+        self.nextActionSet = False
+        self.nextAction = list(c.actions[0])
+        self.recharge = False
+        self.substitute = 0
+        self.specialMod = 6
+        self.speedMod = 6
+        self.pokemon = [Pokemon.Pokemon(0)]
+        for iP in range(6):
+            self.pokemon.append(Pokemon.Pokemon(c.team[iP]))
+        if state is not None:
+            self.setState(state)
     
-    # Number of Pokemon
-    self.nP = 6
+    def setNextAction(self, action):
+        
+        if self.nextActionSet:
+            exit('[Trainer.setNextAction()]: ' + self.name + ' action already set!')
+        if action[0] < 0 or action[0] > 6:
+            exit('[Trainer.setNextAction()]: Illegal switch set by Trainer ' + self.name + '!')
+        if action[1] < 0 or action[1] > 4:
+            exit('[Trainer.setNextAction()]: Illegal move set by Trainer ' + self.name + '!')
+        self.nextAction = action
+        self.nextActionSet = True
     
-    ### Next action
+    def setState(self, state):
+        
+        self.cP = state[0]
+        self.rP = state[1]
+        self.nextActionSet = state[2]
+        self.nextAction = state[3]
+        self.recharge = state[4]
+        self.substitute = state[5]
+        self.specialMod = state[6]
+        self.speedMod = state[7]
+        self.pokemon = [Pokemon.Pokemon(0)]
+        for iP in range(6):
+            self.pokemon.append(Pokemon.Pokemon(c.team[iP], state[8 + iP]))
     
-    # Switch takes precedence over Move
-    # Switch: 1 - 6 \ {unavailable Pokemon}
-    # Switch: 0 = Not set
-    # Move: 1 - 4 \ {unavailable moves}
-    # Move: 0 = Struggle (only when no PP remaining for any move)
-    self.nextActionSet = False
-    self.nextAction = c.actions[0]
+    def getState(self):
+        
+        tempState = []
+        tempState.append(self.cP)
+        tempState.append(self.rP)
+        tempState.append(self.nextActionSet)
+        tempState.append(self.nextAction)
+        tempState.append(self.recharge)
+        tempState.append(self.substitute)
+        tempState.append(self.specialMod)
+        tempState.append(self.speedMod)
+        for iP in range(6):
+            tempState.append(self.pokemon[iP + 1].getState())
+        return tempState
     
-    ### State
+    def getFeatures(self):
+        
+        tempFeatures = np.array([])
+        tempFeatures = np.append(tempFeatures, self.cP / 6)
+        return tempFeatures
     
-    if state is None:
-      # Currently active Pokemon
-      self.cP = 1
-      
-      self.recharge = False
-      self.specialMod = 6
-      self.speedMod = 6
-      
-      # Pokemon
-      self.pokemon = []
-      for iP in range(self.nP):
-        self.pokemon.append(Pokemon.Pokemon(c.team[iP]))
-      
-    else:
-      self.setState(state)
-  
-  def setNextAction(self, action):
-    if self.nextActionSet:
-      exit('[setNextMove]: Move already set!')
-    if action[0] < 0 or action[0] > 6:
-      exit('[setNextMove]: Illegal switch set by Trainer ' + self.name + '!')
-    if action[1] < 0 or action[1] > 4:
-      exit('[setNextMove]: Illegal move set by Trainer ' + self.name + '!')
+    def healDamage(self, damage):
+        
+        self.pokemon[self.cP].cHP += damage
+        if self.pokemon[self.cP].cHP > self.pokemon[self.cP].HP:
+            healed = damage - (self.pokemon[self.cP].cHP - self.pokemon[self.cP].HP)
+            self.pokemon[self.cP].cHP = self.pokemon[self.cP].HP
+        else:
+            healed = damage
+        return damage
     
-    self.nextAction = action
-    self.nextActionSet = True
-  
-  def setState(self, state):
-    self.cP = state[0]
+    def inflictDamage(self, damage, ignoreSub): # ADD IGNORE SUBSTITUTE INPUT?
+        
+        overkill = 0
+        subBroke = False
+        if self.substitute <= 0 or ignoreSub:
+            if self.pokemon[self.cP].cHP > damage:
+                self.pokemon[self.cP].cHP -= damage
+            else:
+                overkill = damage - self.pokemon[self.cP].cHP
+                self.pokemon[self.cP].cHP = 0
+        else:
+            if self.substitute <= damage:
+                overkill = damage - self.substitute
+                self.substitute = 0
+                subBroke = True
+            else:
+                self.substitute -= damage
+        return [overkill, subBroke]
     
-    self.recharge = state[1]
-    self.specialMod = state[2]
-    self.speedMod = state[2]
-    
-    self.pokemon = []
-    for iP in range(self.nP):
-      self.pokemon.append(Pokemon.Pokemon(c.team[iP], state[3][iP]))
-  
-  def getState(self):
-    tempState = [self.cP]
-    
-    tempState.append(self.recharge)
-    tempState.append(self.specialMod)
-    tempState.append(self.speedMod)
-    
-    tempPokemonState = []
-    for iP in range(self.nP):
-      tempPokemonState.append(self.pokemon[iP].getState())
-    tempState.append(tempPokemonState)
-    
-    return tempState
-  
-  def getFeatures(self):
-    tempFeatures = np.array([])
-    
-    tempFeatures = np.append(tempFeatures, int(self.recharge))
-    tempFeatures = np.append(tempFeatures, 1 - self.specialMod / 6)
-    tempFeatures = np.append(tempFeatures, self.speedMod / 6 - 1)
-    
-    tempFeatures = np.append(tempFeatures, self.pokemon[self.cP - 1].getFeatures())
-    
-    for iP in range(self.nP):
-      if iP == self.cP - 1:
-        continue
-      tempFeatures = np.append(tempFeatures, self.pokemon[iP].getFeatures())
-    
-    return tempFeatures
-  
-  def resetNextAction(self):
-    self.nextActionSet = False
-    self.nextSwitch = 0
-    self.nextMove = 0
-  
-  def printSelf(self):
-    print('Trainer ' + self.name + '\'s Pokemon:')
-    for iP in range(self.nP):
-      self.pokemon[iP].printSelf()
+    def resetNextAction(self):
+        
+        self.nextActionSet = False
+        self.nextAction = list(c.actions[0])
+
 #
