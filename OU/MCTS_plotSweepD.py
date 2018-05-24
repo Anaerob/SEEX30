@@ -1,3 +1,4 @@
+import argparse
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
@@ -5,20 +6,40 @@ import numpy as np
 import Constants as c
 import Load
 
-def main():
+def plot(title, yName, yLabel):
     
     dSweep = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    win = Load.loadFloatArray('MCTS_sweepD_win', len(dSweep))
-    
+    y = Load.loadFloatArray('MCTS_sweepD_results/MCTS_sweepD_' + yName, len(dSweep))
     plt.figure()
-    plt.plot(dSweep, win, 'x')
-    plt.title('WINS OVER DEPTH')
+    plt.plot(dSweep, y, 'x')
+    plt.title(title)
     plt.xlabel('Depth')
-    plt.ylabel('Wins')
+    plt.ylabel(yLabel)
+
+def main(args):
     
-    plt.show()
+    plotAnything = args.abort or args.loss or args.tie or args.time or args.win
+    if args.abort:
+        plot('ABORTS OVER DEPTH', 'abort', 'Aborts')
+    if args.loss:
+        plot('LOSSES OVER DEPTH', 'loss', 'Losses')
+    if args.tie:
+        plot('TIES OVER DEPTH', 'tie', 'Ties')
+    if args.time:
+        plot('TIMES OVER DEPTH', 'time', 'Time (s)')
+    if args.win:
+        plot('WINS OVER DEPTH', 'win', 'Wins')
+    if plotAnything:
+        plt.show()
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--abort', action='store_true')
+    parser.add_argument('--loss', action='store_true')
+    parser.add_argument('--tie', action='store_true')
+    parser.add_argument('--time', action='store_true')
+    parser.add_argument('--win', action='store_true')
+    args = parser.parse_args()
+    main(args)
 
 #
