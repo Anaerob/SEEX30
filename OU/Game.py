@@ -771,7 +771,7 @@ class Game:
                 self.trainers[t].inflictDamage(103, False)
                 self.trainers[t].substitute = 104
                 if self.printMe:
-                    print(self.trainers[t].name + '\'s Rhydon did 103 damage to itself and created a substitute!')
+                    print(self.trainers[t].name + '\'s Rhydon did 103 damage to itself and created a substitute with 104 hit points!')
             elif self.trainers[t].pokemon[self.trainers[t].cP].cHP < 103:
                 if self.printMe:
                     print(self.trainers[t].name + '\'s Rhydon\'s health is too low to create a substitute!')
