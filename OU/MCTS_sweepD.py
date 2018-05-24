@@ -55,8 +55,8 @@ def main():
             tie = 0
             win = 0
         AI = [MonteCarloTreeSearchAI.AI(depth[iDepth], epsilon, limit, search, temperature), RandomAI.AI()]
-        startTime = time.time()
         for iGame in range(startGame, nGames):
+            iTime = time.time()
             game = Game.Game(False)
             while game.running and game.round < limit:
                 states = [game.getState(c.amBlack), game.getState(c.amWhite)]
@@ -68,6 +68,7 @@ def main():
                         if game.forceSwitch[iT]:
                             game.trainers[iT].setNextAction(AI[iT].getAction(states[iT]))
                 game.progress()
+            runTime += time.time() - iTime
             if game.win[0] and game.win[1]:
                 tie += 1
             elif game.win[0]:
@@ -76,7 +77,6 @@ def main():
                 loss += 1
             else:
                 abort += 1
-            runTime += time.time() - startTime
             progressFile = open('MCTS_sweepD_results/MCTS_sweepD_progress.txt', 'w')
             progressFile.write(
                 str(iDepth) + '\n'
