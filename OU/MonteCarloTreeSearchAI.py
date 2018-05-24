@@ -14,8 +14,10 @@ class AI:
         self.almostGuaranteed = 1 + 10 * t
         self.depth = d
         self.epsilon = e
+        self.extendSearch = False
         self.limit = l
         self.search = s
+        self.searchNotFinished = True
         self.temperature = t
     
     def getAction(self, state):
@@ -23,7 +25,8 @@ class AI:
         randomAI = RandomAI.AI()
         strategyTries = [{}, {}]
         strategyWins = [{}, {}]
-        for iSearch in range(self.search):
+        iSearch = 0
+        while self.searchNotFinished or self.extendSearch:
             
             # Initialize a simulation starting from the given state
             sim = Game.Game(False, state)
@@ -122,6 +125,10 @@ class AI:
                         else:
                             strategyWins[iT][tryingNow[iT][0:6 * subStrategy]] = 0
                         break
+            
+            iSearch += 1
+            self.searchNotFinished = iSearch < self.search
+        self.searchNotFinished = True
         
         # Build final Q from the results of the tree search
         actions = self.getAllowedActions(state)
