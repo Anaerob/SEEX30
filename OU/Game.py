@@ -157,7 +157,7 @@ class Game:
         self.trainers[t].speedMod = 6
         
         if self.printMe:
-            print('Trainer ' + self.trainers[t].name + ' switched to ' + str(self.trainers[t].pokemon[self.trainers[t].cP].name) + '!')
+            print(self.trainers[t].name + ' switched to ' + str(self.trainers[t].pokemon[self.trainers[t].cP].name) + '!')
     
     def useMove(self, t):
         
@@ -819,7 +819,7 @@ class Game:
                 if overkill == 0:
                     print('Struggle did ' + str(int(damage / 2)) + ' recoil damage!')
                 else:
-                    print('Struggle did ' + str(int(damage / 2)) + ' recoil damage! Overkill: ' + str(overkill))
+                    print('Struggle did ' + str(int(damage / 2)) + ' recoil damage! ' + str(overkill) + ' overkill!')
     
     def calculateDamage(self, level, attack, power, defense):
         
@@ -842,10 +842,10 @@ class Game:
             if overkill == 0:
                 print(move + ' did ' + str(damage) + critical + '!')
             else:
-                print(move + ' did ' + str(damage) + critical + '! Overkill: ' + str(overkill))
+                print(move + ' did ' + str(damage) + critical + '! ' + str(overkill) + ' overkill!')
         elif self.trainers[t].substitute > 0:
             print(move + ' did ' + str(damage) + critical + ' to the substitute!')
         elif subBroke:
-            print(move + ' did ' + str(damage) + critical + ' and broke the substitute! Overkill: ' + str(overkill))
+            print(move + ' did ' + str(damage) + critical + ' and broke the substitute! ' + str(overkill) + ' overkill!')
 
 #
