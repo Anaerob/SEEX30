@@ -1,7 +1,4 @@
-import numpy as np
-
-import Constants as c
-import Game
+import random
 
 
 class AI:
@@ -9,32 +6,27 @@ class AI:
     
     def getAction(self, state):
         
-        sim = Game.Game(False, state)
-        if sim.forceSwitch[0]:
+        if state[4][0]:
             action = self.getSwitch(state)
         else:
-            moves = [7, 8, 9, 10]
+            moves = [[0, 1], [0, 2], [0, 3], [0, 4]]
             for iM in range(1, 5):
-                if sim.trainers[0].pokemon[sim.trainers[0].cP].moves[iM].cPP <= 0:
-                    moves.remove(iM + 6)
+                if state[15][0][state[3][0] - 1][iM] <= 0:
+                    moves.remove([0, iM])
             if len(moves) == 0:
                 action = [0, 0]
             else:
-                choice = np.random.choice(moves)
-                action = list(c.actions[choice])
+                action = random.choice(moves)
         return action
         
     def getSwitch(self, state):
         
-        sim = Game.Game(False, state)
-        switches = [1, 2, 3, 4, 5, 6]
+        switches = [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0]]
         for iP in range(1, 7):
-            if sim.trainers[0].pokemon[iP].cHP <= 0:
-                switches.remove(iP)
-            elif sim.trainers[0].cP == iP:
-                switches.remove(iP)
-        choice = np.random.choice(switches)
-        switch = list(c.actions[choice])
-        return switch
+            if state[14][0][iP] <= 0:
+                switches.remove([iP, 0])
+            elif state[3][0] == iP:
+                switches.remove([iP, 0])
+        return random.choice(switches)
 
 #

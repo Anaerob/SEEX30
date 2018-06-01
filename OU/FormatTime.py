@@ -1,8 +1,11 @@
 
 def getString(time):
     
-    if time < 1:
-        s = str(int(1000 * time)) + 'ms'
+    if 1000 * time < 1:
+        s = str(int(1000 * 1000 * time)) + 'µs'
+    elif time < 1:
+        s = (str(int(1000 * time)) + 'ms, '
+            + str(int(1000 * (1000 * time % 1))) + 'µs')
     elif time < 60:
         s = (str(int(time)) + 's, '
             + str(int(1000 * (time % 1))) + 'ms')

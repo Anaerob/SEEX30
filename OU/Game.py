@@ -1,543 +1,812 @@
-import numpy as np
+import random
 
-import Constants as c
-import Trainer
+amPlayer = True
+amAI = False
+
+actions = [0, [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [0, 0], [0, 1], [0, 2], [0, 3], [0, 4]]
+
+# Status modifier factor
+statMods = [25, 28, 33, 40, 50, 66, 100, 150, 200, 250, 300, 350, 400]
+
+#
+# Pokemon
+#
+
+# Names
+pNames = ['', 'Exeggutor', 'Rhydon', 'Chansey', 'Tauros', 'Snorlax', 'Zapdos']
+
+# Hit Points
+pHP = [0, 393, 413, 703, 353, 523, 383]
+
+# Attack
+pAttack = [0, 288, 358, 108, 298, 318, 278]
+
+# Defense
+pDefense = [0, 268, 338, 108, 288, 228, 268]
+
+# Special
+pSpecial = [0, 348, 188, 308, 238, 228, 348]
+
+# Speed
+pSpeed = [0, 208, 178, 198, 318, 158, 298]
+
+# Crit
+pCrit = [0, 22, 20, 25, 55, 15, 50]
+
+# Moves
+pMoves = [
+    [0, 0, 0, 0, 0],
+    [0, 5, 6, 10, 14],
+    [0, 1, 9, 15, 16],
+    [0, 2, 7, 8, 13],
+    [0, 1, 2, 3, 9],
+    [0, 1, 3, 9, 12],
+    [0, 4, 7, 8, 11]]
+
+#
+# Moves
+#
+
+# Names
+mNames = ['Struggle',
+    'Body Slam',
+    'Ice Beam',
+    'Hyper Beam',
+    'Drill Peck',
+    'Stun Spore',
+    'Sleep Powder',
+    'Thunderbolt', 
+    'Thunder Wave',
+    'Earthquake',
+    'Psychic',
+    'Agility',
+    'Selfdestruct',
+    'Softboiled',
+    'Explosion',
+    'Rock Slide',
+    'Substitute']
+
+# Power
+mPower = [50, 85, 95, 150, 80, 0, 0, 95, 0, 100, 90, 0, 260, 0, 340, 75, 0]
+
+# Accuracy
+mAccuracy = [256, 255, 255, 230, 255, 191, 191, 255, 255, 255, 255, 256, 255, 256, 255, 230, 256]
+
+# Power points
+mPP = [10, 24, 16, 8, 32, 48, 24, 24, 32, 16, 16, 48, 8, 16, 8, 16, 16]
 
 
 class Game:
     
     
-    def __init__(self, printMe, state = None):
+    def __init__(self, state = None):
         
-        self.printMe = printMe
+        self.summary = ''
+        self.names = ['Player', 'AI']
         
-        self.round = 0
-        self.running = True
-        self.forceSwitch = [False, False]
-        self.win = [False, False]
-        self.trainers = [Trainer.Trainer('Black'), Trainer.Trainer('White')]
-        if state is not None:
+        if state is None:
+            
+            # Game
+            self.round = 0
+            self.running = True
+            self.win = [False, False]
+            
+            # Trainer
+            self.currentPokemon = [0, 0]
+            self.forceSwitch = [False, False]
+            self.nextAction = [[1, 0], [1, 0]]
+            self.recharge = [False, False]
+            self.remainingPokemon = [6, 6]
+            self.substitute = [0, 0]
+            self.specialMod = [6, 6]
+            self.speedMod = [6, 6]
+            
+            # Pokemon
+            self.frozen = [
+                [False, False, False, False, False, False, False],
+                [False, False, False, False, False, False, False]]
+            self.paralyzed = [
+                [False, False, False, False, False, False, False],
+                [False, False, False, False, False, False, False]]
+            self.sleeping = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
+            self.currentHP = [
+                [0, 393, 413, 703, 353, 523, 383],
+                [0, 393, 413, 703, 353, 523, 383]]
+            
+            # Move
+            self.currentPP = [
+                [
+                    [10, 10, 10, 10, 10],
+                    [10, 48, 24, 16, 8],
+                    [10, 24, 16, 16, 16],
+                    [10, 16, 24, 32, 16],
+                    [10, 24, 16, 8, 16],
+                    [10, 24, 8, 16, 8],
+                    [10, 32, 24, 32, 48]],
+                [
+                    [10, 10, 10, 10, 10],
+                    [10, 48, 24, 16, 8],
+                    [10, 24, 16, 16, 16],
+                    [10, 16, 24, 32, 16],
+                    [10, 24, 16, 8, 16],
+                    [10, 24, 8, 16, 8],
+                    [10, 32, 24, 32, 48]]]
+            
+            self.doSwitch(0)
+            self.doSwitch(1)
+        else:
             self.setState(state)
-        elif printMe:
-            print('Player sent out Exeggutor!')
-            print('AI sent out Exeggutor!')
     
     def setState(self, state):
         
+        # Game
         self.round = state[0]
         self.running = state[1]
-        self.forceSwitch = [state[2], state[3]]
-        self.win = [state[4], state[5]]
-        self.trainers = [
-            Trainer.Trainer('Black', state[6]),
-            Trainer.Trainer('White', state[7])]
+        self.win = list(state[2])
+        
+        # Trainer
+        self.currentPokemon = list(state[3])
+        self.forceSwitch = list(state[4])
+        self.nextAction = list(state[5])
+        self.recharge = list(state[6])
+        self.remainingPokemon = list(state[7])
+        self.substitute = list(state[8])
+        self.specialMod = list(state[9])
+        self.speedMod = list(state[10])
+        
+        # Pokemon
+        self.frozen = [list(state[11][0]), list(state[11][1])]
+        self.paralyzed = [list(state[12][0]), list(state[12][1])]
+        self.sleeping = [list(state[13][0]), list(state[13][1])]
+        self.currentHP = [list(state[14][0]), list(state[14][1])]
+        
+        # Move
+        self.currentPP = [
+                [
+                    [10, 10, 10, 10, 10],
+                    list(state[15][0][0]),
+                    list(state[15][0][1]),
+                    list(state[15][0][2]),
+                    list(state[15][0][3]),
+                    list(state[15][0][4]),
+                    list(state[15][0][5])],
+                [
+                    [10, 10, 10, 10, 10],
+                    list(state[15][1][0]),
+                    list(state[15][1][1]),
+                    list(state[15][1][2]),
+                    list(state[15][1][3]),
+                    list(state[15][1][4]),
+                    list(state[15][1][5])]]
     
-    def getState(self, isBlack):
+    def getState(self, isPlayer):
+        
+        # Set perspective
+        t = 1
+        o = 0
+        if isPlayer:
+            t = 0
+            o = 1
         
         tempState = []
+        
+        # Game
         tempState.append(self.round)
         tempState.append(self.running)
-        p = 1
-        if isBlack:
-            p = 0
-        tempState.append(self.forceSwitch[p])
-        tempState.append(self.forceSwitch[(p + 1) % 2])
-        tempState.append(self.win[p])
-        tempState.append(self.win[(p + 1) % 2])
-        tempState.append(self.trainers[p].getState())
-        tempState.append(self.trainers[(p + 1) % 2].getState())
+        tempState.append([self.win[t], self.win[o]])
+        
+        # Trainer
+        tempState.append([self.currentPokemon[t], self.currentPokemon[o]])
+        tempState.append([self.forceSwitch[t], self.forceSwitch[o]])
+        tempState.append([self.nextAction[t], self.nextAction[o]])
+        tempState.append([self.recharge[t], self.recharge[o]])
+        tempState.append([self.remainingPokemon[t], self.remainingPokemon[o]])
+        tempState.append([self.substitute[t], self.substitute[o]])
+        tempState.append([self.specialMod[t], self.specialMod[o]])
+        tempState.append([self.speedMod[t], self.speedMod[o]])
+        
+        # Pokemon
+        tempState.append([list(self.frozen[t]), list(self.frozen[o])])
+        tempState.append([list(self.paralyzed[t]), list(self.paralyzed[o])])
+        tempState.append([list(self.sleeping[t]), list(self.sleeping[o])])
+        tempState.append([list(self.currentHP[t]), list(self.currentHP[o])])
+        
+        # Move
+        tempState.append([
+            [
+                list(self.currentPP[t][1]),
+                list(self.currentPP[t][2]),
+                list(self.currentPP[t][3]),
+                list(self.currentPP[t][4]),
+                list(self.currentPP[t][5]),
+                list(self.currentPP[t][6])],
+            [
+                list(self.currentPP[o][1]),
+                list(self.currentPP[o][2]),
+                list(self.currentPP[o][3]),
+                list(self.currentPP[o][4]),
+                list(self.currentPP[o][5]),
+                list(self.currentPP[o][6])]])
+        
         return tempState
     
-    def getFeatures(self, isBlack):
+    def getSummary(self):
         
-        tempFeatures = np.array([])
-        p = 1
-        if isBlack:
-            p = 0
-        tempFeatures = np.append(tempFeatures, self.trainers[p].getFeatures())
-        tempFeatures = np.append(tempFeatures, self.trainers[(p + 1) % 2].getFeatures())
-        return tempFeatures
+        temp = self.summary
+        self.summary = ''
+        return temp
     
     def progress(self):
         
         if self.forceSwitch[0] or self.forceSwitch[1]:
-            r = np.random.randint(2)
+            r = random.randint(0, 1)
             for iT in range(2):
                 t = (iT + r) % 2
                 if self.forceSwitch[t]:
                     
-                    if not self.trainers[t].nextActionSet:
-                        exit('EXIT [Game.progress()]: Trainer ' + self.trainers[t].name + ' move not set!')
-                    elif self.trainers[t].nextAction[0] < 1 or self.trainers[t].nextAction[0] > 6:
-                        exit('EXIT [Game.progress()]: Trainer ' + self.trainers[t].name + '\'s chosen switch is illegal!')
-                    elif self.trainers[t].pokemon[self.trainers[t].nextAction[0]].cHP <= 0:
-                        exit('EXIT [Game.progress()]: Trainer ' + self.trainers[t].name + ' tried switching in fainted ' + self.trainers[t].pokemon[self.trainers[t].nextAction[0]].name)
+                    # Check for illegal switches
+                    if self.nextAction[t] == 0:
+                        exit('EXIT [Game.progress()]: Trainer ' + self.names[t] + ' move not set!')
+                    if self.nextAction[t][0] < 1 or self.nextAction[t][0] > 6:
+                        exit('EXIT [Game.progress()]: Trainer ' + self.names[t] + '\'s chosen switch is illegal!')
+                    if self.currentHP[t][self.nextAction[t][0]] <= 0:
+                        exit('EXIT [Game.progress()]: Trainer ' + self.names[t] + ' tried switching in fainted ' + pNames[self.nextAction[t][0]] + '!')
                     
                     self.doSwitch(t)
                 
                 else:
-                    self.trainers[t].resetNextAction()
+                    self.nextAction[t] = 0
         else:
             
-            if self.printMe:
-                print('\n' + 'Round ' + str(self.round + 1) + '!\n')
+            self.summary += ('\n' + 'Round ' + str(self.round + 1) + '!\n\n')
             
+            # Check for illegal actions
             for iT in range(2):
-                if not self.trainers[iT].nextActionSet:
-                    exit('EXIT [Game.progress()]: Trainer ' + self.trainers[iT].name + ' move not set!')
-                elif self.trainers[iT].nextAction[0] < 0 or self.trainers[iT].nextAction[0] > 6:
-                    exit('EXIT [Game.progress()]: Trainer ' + self.trainers[iT].name + '\'s chosen switch is illegal!')
-                elif self.trainers[iT].nextAction[1] < 0 or self.trainers[iT].nextAction[1] > 4:
-                    exit('EXIT [Game.progress()]: Trainer ' + self.trainers[iT].name + '\'s chosen move is illegal!')
-                elif self.trainers[iT].nextAction[0] != 0:
-                    if self.trainers[iT].pokemon[self.trainers[iT].nextAction[0]].cHP <= 0:
-                        exit('EXIT [Game.progress()]: Trainer ' + self.trainers[iT].name + ' tried switching in fainted Pokémon!')
+                if self.nextAction[iT] == 0:
+                    exit('EXIT [Game.progress()]: Trainer ' + self.names[iT] + ' move not set!')
+                if self.nextAction[iT][0] < 0 or self.nextAction[iT][0] > 6:
+                    exit('EXIT [Game.progress()]: Trainer ' + self.names[iT] + '\'s chosen switch is illegal!')
+                if self.nextAction[iT][1] < 0 or self.nextAction[iT][1] > 4:
+                    exit('EXIT [Game.progress()]: Trainer ' + self.names[iT] + '\'s chosen move is illegal!')
+                if self.nextAction[iT][0] != 0 and self.currentHP[iT][self.nextAction[iT][0]] <= 0:
+                    exit('EXIT [Game.progress()]: Trainer ' + self.names[iT] + ' tried switching in fainted ' + pNames[self.nextAction[iT][0]] + '!')
+                if self.nextAction[iT][1] != 0 and self.currentPP[iT][self.currentPokemon[iT]][self.nextAction[iT][1]] <= 0:
+                    exit('EXIT [Game.progress()]: Trainer ' + self.names[iT] + ' tried using zero PP move ' + mNames[pMoves[self.currentPokemon[iT]][self.nextAction[iT][1]]] + '!')
             
-            bSwitch = self.trainers[0].nextAction[0] > 0 and not self.trainers[0].recharge
-            wSwitch = self.trainers[1].nextAction[0] > 0 and not self.trainers[1].recharge
-            if bSwitch and wSwitch:
-                t = np.random.randint(2)
+            # Check if any trainer wants to switch
+            switch = []
+            switch.append(self.nextAction[0][0] > 0 and not self.recharge[0])
+            switch.append(self.nextAction[1][0] > 0 and not self.recharge[1])
+            if switch[0] and switch[1]:
+                t = random.randint(0, 1)
                 self.doSwitch(t)
                 self.doSwitch((t + 1) % 2)
-            elif bSwitch:
+            elif switch[0]:
                 self.doSwitch(0)
                 self.useMove(1)
-            elif wSwitch:
+            elif switch[1]:
                 self.doSwitch(1)
                 self.useMove(0)
             else:
                 
-                # Flooring and division by 100 * 100 omitted because not neccessary for comparison
-                bSpeed = (self.trainers[0].pokemon[self.trainers[0].cP].speed
-                    * c.statMods[self.trainers[0].speedMod]
-                    * (100 - 75 * self.trainers[0].pokemon[self.trainers[0].cP].paralyzed))
-                wSpeed = (self.trainers[1].pokemon[self.trainers[1].cP].speed
-                    * c.statMods[self.trainers[1].speedMod]
-                    * (100 - 75 * self.trainers[1].pokemon[self.trainers[1].cP].paralyzed))
-                
-                t = int(bSpeed < wSpeed)
-                if bSpeed == wSpeed:
-                    t = np.random.randint(2)
+                # Compare speed
+                speed = []
+                speed.append(
+                    pSpeed[self.currentPokemon[0]]
+                    * statMods[self.speedMod[0]]
+                    * (100 - 75 * self.paralyzed[0][self.currentPokemon[0]]))
+                speed.append(
+                    pSpeed[self.currentPokemon[1]]
+                    * statMods[self.speedMod[1]]
+                    * (100 - 75 * self.paralyzed[1][self.currentPokemon[1]]))
+                t = int(speed[0] < speed[1])
+                if speed[0] == speed[1]:
+                    t = random.randint(0, 1)
                 
                 # Use moves in order, only use second move if Pokemon still active
                 self.useMove(t)
-                if (self.trainers[t].pokemon[self.trainers[t].cP].cHP > 0
-                        and self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].cHP > 0):
+                if (self.currentHP[t][self.currentPokemon[t]] > 0
+                        and self.currentHP[(t + 1) % 2][self.currentPokemon[(t + 1) % 2]] > 0):
                     self.useMove((t + 1) % 2)
                 else:
-                    self.trainers[(t + 1) % 2].resetNextAction()
+                    self.nextAction[(t + 1) % 2] = 0
             
+            # Check if any Pokemon fainted
             for iT in range(2):
-                if self.trainers[iT].pokemon[self.trainers[iT].cP].cHP <= 0:
-                    if self.printMe:
-                        print(self.trainers[iT].name + '\'s ' + self.trainers[iT].pokemon[self.trainers[iT].cP].name + ' fainted!')
+                if self.currentHP[iT][self.currentPokemon[iT]] <= 0:
                     self.forceSwitch[iT] = True
-                    self.trainers[iT].rP -= 1
-                    self.trainers[iT].pokemon[self.trainers[iT].cP].frozen = False
-                    self.trainers[iT].pokemon[self.trainers[iT].cP].paralyzed = False
-                    self.trainers[iT].pokemon[self.trainers[iT].cP].sleeping = 0
+                    self.remainingPokemon[iT] -= 1
+                    self.frozen[iT][self.currentPokemon[iT]] = False
+                    self.paralyzed[iT][self.currentPokemon[iT]] = False
+                    self.sleeping[iT][self.currentPokemon[iT]] = 0
+                    self.summary += (self.names[iT] + '\'s ' + pNames[self.currentPokemon[iT]] + ' fainted!\n')
             
+            # Check if any trainer ran out of Pokemon
             for iT in range(2):
-                if self.trainers[iT].rP <= 0:
+                if self.remainingPokemon[iT] <= 0:
                     self.running = False
                     self.win[(iT + 1) % 2] = True
-                    if self.printMe:
-                        print('\n' + self.trainers[(iT + 1) % 2].name + ' wins!\n')
+                    self.summary += ('\n' + self.names[(iT + 1) % 2] + ' wins!\n')
             
             self.round += 1
     
     def doSwitch(self, t):
         
-        self.trainers[t].cP = self.trainers[t].nextAction[0]
-        self.forceSwitch[t] = False
-        self.trainers[t].resetNextAction()
-        self.trainers[t].recharge = False
-        self.trainers[t].substitute = 0
-        self.trainers[t].specialMod = 6
-        self.trainers[t].speedMod = 6
+        self.currentPokemon[t] = self.nextAction[t][0]
+        self.recharge[t] = False
+        self.substitute[t] = 0
+        self.specialMod[t] = 6
+        self.speedMod[t] = 6
         
-        if self.printMe:
-            print(self.trainers[t].name + ' switched to ' + str(self.trainers[t].pokemon[self.trainers[t].cP].name) + '!')
+        self.forceSwitch[t] = False
+        self.nextAction[t] = 0
+        
+        self.summary += (self.names[t] + ' switched to ' + pNames[self.currentPokemon[t]] + '!\n')
     
     def useMove(self, t):
         
         # Recharge if needed
-        if self.trainers[t].recharge:
-            self.trainers[t].recharge = False
-            if self.printMe:
-                print(self.trainers[t].name + '\'s ' + str(self.trainers[t].pokemon[self.trainers[t].cP].name) + ' recharged!')
+        if self.recharge[t]:
+            self.recharge[t] = False
+            self.summary += (self.names[t] + '\'s ' + pNames[self.currentPokemon[t]] + ' recharged!\n')
         
         # Check and determine if paralyzed
-        elif self.trainers[t].pokemon[self.trainers[t].cP].paralyzed and np.random.randint(256) < 64:
-            if self.printMe:
-                print(self.trainers[t].name + '\'s ' + str(self.trainers[t].pokemon[self.trainers[t].cP].name) + ' is paralyzed and can\'t move!')
-        
-        # Check if frozen
-        elif self.trainers[t].pokemon[self.trainers[t].cP].frozen:
-            if self.printMe:
-                print(self.trainers[t].name + '\'s ' + str(self.trainers[t].pokemon[self.trainers[t].cP].name) + ' is frozen and can\'t move!')
+        elif self.paralyzed[t][self.currentPokemon[t]] and random.randint(0, 255) < 64:
+            self.summary += (self.names[t] + '\'s ' + pNames[self.currentPokemon[t]] + ' is fully paralyzed and can\'t move!\n')
         
         # Check if sleeping and try to wake up
-        elif self.trainers[t].pokemon[self.trainers[t].cP].sleeping > 0:
-            self.trainers[t].pokemon[self.trainers[t].cP].sleeping -= 1
-            if self.printMe:
-                if self.trainers[t].pokemon[self.trainers[t].cP].sleeping <= 0:
-                    print(self.trainers[t].name + '\'s ' + str(self.trainers[t].pokemon[self.trainers[t].cP].name) + ' woke up from sleep!')
-                else:
-                    print(self.trainers[t].name + '\'s ' + str(self.trainers[t].pokemon[self.trainers[t].cP].name) + ' is sleeping and can\'t move!')
+        elif self.sleeping[t][self.currentPokemon[t]] > 0:
+            self.sleeping[t][self.currentPokemon[t]] -= 1
+            if self.sleeping[t][self.currentPokemon[t]] <= 0:
+                self.summary += (self.names[t] + '\'s ' + pNames[self.currentPokemon[t]] + ' woke up from sleep!\n')
+            else:
+                self.summary += (self.names[t] + '\'s ' + pNames[self.currentPokemon[t]] + ' is sleeping and can\'t move!\n')
+        
+        # Check if frozen
+        elif self.frozen[t][self.currentPokemon[t]]:
+            self.summary += (self.names[t] + '\'s ' + pNames[self.currentPokemon[t]] + ' is frozen solid and can\'t move!\n')
         
         else:
-            if self.printMe:
-                print(self.trainers[t].name + '\'s ' + str(self.trainers[t].pokemon[self.trainers[t].cP].name) + ' used ' + str(self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].name) + '!')
+            self.summary += (self.names[t] + '\'s ' + pNames[self.currentPokemon[t]] + ' used ' + mNames[pMoves[self.currentPokemon[t]][self.nextAction[t][1]]] + '!\n')
             
             # Deduct PP, unless the move is Struggle
-            if self.trainers[t].nextAction[1] != 0:
-                self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].cPP -= 1
+            if self.nextAction[t][1] != 0:
+                self.currentPP[t][self.currentPokemon[t]][self.nextAction[t][1]] -= 1
             
             # Check if move misses (1/256 miss bugg included)
-            if np.random.randint(256) < self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].accuracy:
+            if random.randint(0, 255) < mAccuracy[pMoves[self.currentPokemon[t]][self.nextAction[t][1]]]:
                 
-                if self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 34:
+                if pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 1:
                     self.useBodySlam(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 58:
-                    self.useIceBeam(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 63:
-                    self.useHyperBeam(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 65:
-                    self.useDrillPeck(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 78:
-                    self.useStunSpore(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 79:
-                    self.useSleepPowder(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 85:
-                    self.useThunderbolt(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 86:
-                    self.useThunderWave(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 89:
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 9:
                     self.useEarthquake(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 94:
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 2:
+                    self.useIceBeam(t)
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 3:
+                    self.useHyperBeam(t)
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 7:
+                    self.useThunderbolt(t)
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 8:
+                    self.useThunderWave(t)
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 4:
+                    self.useDrillPeck(t)
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 5:
+                    self.useStunSpore(t)
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 6:
+                    self.useSleepPowder(t)
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 10:
                     self.usePsychic(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 97:
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 11:
                     self.useAgility(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 120:
-                    self.useSelfdestruct(t, True)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 135:
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 13:
                     self.useSoftboiled(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 153:
-                    self.useExplosion(t, True)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 157:
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 15:
                     self.useRockSlide(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 164:
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 16:
                     self.useSubstitute(t)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 165:
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 12:
+                    self.useSelfdestruct(t, True)
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 14:
+                    self.useExplosion(t, True)
+                elif self.nextAction[t][1] == 0:
                     self.useStruggle(t)
             else:
-                if self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 120:
+                if pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 12:
                     self.useSelfdestruct(t, False)
-                elif self.trainers[t].pokemon[self.trainers[t].cP].moves[self.trainers[t].nextAction[1]].index == 153:
+                elif pMoves[self.currentPokemon[t]][self.nextAction[t][1]] == 14:
                     self.useExplosion(t, False)
-                if self.printMe:
-                    print(self.trainers[t].name + '\'s ' + str(self.trainers[t].pokemon[self.trainers[t].cP].name) + ' missed!')
-        self.trainers[t].resetNextAction()
+                self.summary += (self.names[t] + '\'s ' + pNames[self.currentPokemon[t]] + ' missed!\n')
+        self.nextAction[t] = 0
+    
+    def useStruggle(self, t): # All Pokémon
+        
+        critical = ''
+        level = 100
+        o = (t + 1) % 2
+        
+        # Critical hit?
+        if random.randint(0, 255) < pCrit[self.currentPokemon[t]]:
+            level = 200
+            critical = ' critical'
+        
+        damage = self.calculateDamage(
+            level,
+            pAttack[self.currentPokemon[t]],
+            50,
+            pDefense[self.currentPokemon[o]])
+        
+        # x0.5 against Rhydon
+        if self.currentPokemon[o] == 2:
+            damage = int(damage / 2)
+        
+        # STAB using Chansey, Tauros, Snorlax
+        if self.currentPokemon[t] == 3 or self.currentPokemon[t] == 4 or self.currentPokemon[t] == 5:
+            damage = int(damage * 1.5)
+        
+        substituteBroke = False
+        if self.substitute[o] <= 0:
+            self.currentHP[o][self.currentPokemon[o]] -= int(damage)
+            self.summary += ('Struggle did ' + str(damage) + critical + ' damage!\n')
+        else:
+            self.substitute[o] -= int(damage)
+            self.summary += ('Struggle did ' + str(damage) + critical + ' damage')
+            if self.substitute[o] <= 0:
+                substituteBroke = True
+                self.summary += (' and broke the substitute!\n')
+            else:
+                self.summary += (' to the substitute!\n')
+        
+        if not substituteBroke:
+            self.currentHP[t][self.currentPokemon[t]] -= int(damage / 2)
+            self.summary += (self.names[t] + '\'s ' + pNames[self.currentPokemon[t]] + ' took ' + str(int(damage / 2)) + ' recoil damage!\n')
     
     def useBodySlam(self, t): # Rhydon, Tauros, Snorlax
         
-        critical = ' damage'
+        critical = ''
         level = 100
         o = (t + 1) % 2
         
         # Critical hit?
-        if np.random.randint(256) < np.floor(self.trainers[t].pokemon[self.trainers[t].cP].baseSpeed / 2):
+        if random.randint(0, 255) < pCrit[self.currentPokemon[t]]:
             level = 200
-            critical = ' critical damage'
+            critical = ' critical'
         
         damage = self.calculateDamage(
             level,
-            self.trainers[t].pokemon[self.trainers[t].cP].attack,
+            pAttack[self.currentPokemon[t]],
             85,
-            self.trainers[o].pokemon[self.trainers[o].cP].defense)
+            pDefense[self.currentPokemon[o]])
         
         # x0.5 against Rhydon
-        if self.trainers[o].pokemon[self.trainers[o].cP].index == 112:
+        if self.currentPokemon[o] == 2:
             damage = int(damage / 2)
         
         # STAB using Tauros, Snorlax
-        if (self.trainers[t].pokemon[self.trainers[t].cP].index == 128
-                or self.trainers[t].pokemon[self.trainers[t].cP].index == 143):
+        if self.currentPokemon[t] == 4 or self.currentPokemon[t] == 5:
             damage = int(damage * 1.5)
         
-        [overkill, subBroke] = self.trainers[o].inflictDamage(damage, False)
-        if self.printMe:
-            self.damagePrint(o, critical, damage, overkill, subBroke)
+        substituteBroke = False
+        if self.substitute[o] <= 0:
+            self.currentHP[o][self.currentPokemon[o]] -= int(damage)
+            self.summary += ('Body Slam did ' + str(damage) + critical + ' damage!\n')
+        else:
+            self.substitute[o] -= int(damage)
+            self.summary += ('Body Slam did ' + str(damage) + critical + ' damage')
+            if self.substitute[o] <= 0:
+                substituteBroke = True
+                self.summary += (' and broke the substitute!\n')
+            else:
+                self.summary += (' to the substitute!\n')
         
-        # Paralyze except against Chansey, Tauros, Snorlax
-        if (self.trainers[o].pokemon[self.trainers[o].cP].index != 113
-                and self.trainers[o].pokemon[self.trainers[o].cP].index != 128
-                and self.trainers[o].pokemon[self.trainers[o].cP].index != 143):
+        # 30%: Paralyze
+        if random.randint(0, 255) < 77:
             
-            if self.trainers[o].pokemon[self.trainers[o].cP].cHP > 0:
+            # Can only paralyze Exeggutor, Rhydon, Zapdos
+            if self.currentPokemon[o] == 1 or self.currentPokemon[o] == 2 or self.currentPokemon[o] == 6:
                 
-                # Can not paralyze substitute, even if broken
-                if self.trainers[o].substitute <= 0 and not subBroke:
+                # Don't if fainted from attack
+                if self.currentHP[o][self.currentPokemon[o]] > 0:
                     
-                    # 30%: paralyze
-                    if np.random.randint(256) < 77:
-                        if not self.trainers[o].pokemon[self.trainers[o].cP].frozen:
-                            if not self.trainers[o].pokemon[self.trainers[o].cP].paralyzed:
-                                if self.trainers[o].pokemon[self.trainers[o].cP].sleeping <= 0:
-                                    self.trainers[o].pokemon[self.trainers[o].cP].paralyzed = True
-                                    if self.printMe:
-                                        print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' was paralyzed!')
+                    # Don't if substitute exist or existed
+                    if self.substitute[o] <= 0 and not substituteBroke:
+                        
+                        # Unless already frozen
+                        if not self.frozen[o][self.currentPokemon[o]]:
+                            
+                            # Unless already paralyzed
+                            if not self.paralyzed[o][self.currentPokemon[o]]:
+                                
+                                # Unless already sleeping
+                                if self.sleeping[o][self.currentPokemon[o]] <= 0:
+                                    
+                                    self.paralyzed[o][self.currentPokemon[o]] = True
+                                    self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' was paralyzed!\n')
                                 else:
-                                    if self.printMe:
-                                        print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already sleeping!')
+                                    self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already sleeping!\n')
                             else:
-                                if self.printMe:
-                                    print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already paralyzed!')
+                                self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already paralyzed!\n')
                         else:
-                            if self.printMe:
-                                print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already frozen!')
+                            self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already frozen!\n')
     
     def useIceBeam(self, t): # Chansey, Tauros
         
-        critical = ' damage'
+        critical = ''
         o = (t + 1) % 2
         
         # Critical hit?
-        if np.random.randint(256) < np.floor(self.trainers[t].pokemon[self.trainers[t].cP].baseSpeed / 2):
+        if random.randint(0, 255) < pCrit[self.currentPokemon[t]]:
             damage = self.calculateDamage(
                 200,
-                self.trainers[t].pokemon[self.trainers[t].cP].special,
+                pSpecial[self.currentPokemon[t]],
                 95,
-                self.trainers[o].pokemon[self.trainers[o].cP].special)
-            critical = ' critical damage'
+                pSpecial[self.currentPokemon[o]])
+            critical = ' critical'
         else:
             damage = self.calculateDamage(
                 100,
-                np.floor(
-                    c.statMods[self.trainers[t].specialMod]
-                    * self.trainers[t].pokemon[self.trainers[t].cP].special / 100),
+                int(statMods[self.specialMod[t]] * pSpecial[self.currentPokemon[t]] / 100),
                 95,
-                np.floor(
-                    c.statMods[self.trainers[o].specialMod]
-                    * self.trainers[o].pokemon[self.trainers[o].cP].special / 100))
+                int(statMods[self.specialMod[o]] * pSpecial[self.currentPokemon[o]] / 100))
         
         # x2 against Exeggutor, Rhydon, Zapdos
-        if (self.trainers[o].pokemon[self.trainers[o].cP].index == 103
-                or self.trainers[o].pokemon[self.trainers[o].cP].index == 112
-                or self.trainers[o].pokemon[self.trainers[o].cP].index == 145):
+        if self.currentPokemon[o] == 1 or self.currentPokemon[o] == 2 or self.currentPokemon[o] == 6:
             damage = int(damage * 2)
         
-        [overkill, subBroke] = self.trainers[o].inflictDamage(damage, False)
-        if self.printMe:
-            self.damagePrint(o, critical, damage, overkill, subBroke)
+        substituteBroke = False
+        if self.substitute[o] <= 0:
+            self.currentHP[o][self.currentPokemon[o]] -= int(damage)
+            self.summary += ('Ice Beam did ' + str(damage) + critical + ' damage!\n')
+        else:
+            self.substitute[o] -= int(damage)
+            self.summary += ('Ice Beam did ' + str(damage) + critical + ' damage')
+            if self.substitute[o] <= 0:
+                substituteBroke = True
+                self.summary += (' and broke the substitute!\n')
+            else:
+                self.summary += (' to the substitute!\n')
         
-        if self.trainers[o].pokemon[self.trainers[o].cP].cHP > 0:
-            
-            # Can not freeze substitute, even if broken
-            if self.trainers[o].substitute <= 0 and not subBroke:
-            
-                # 10%: freeze
-                if np.random.randint(256) < 26:
+        # 10%: Freeze
+        if random.randint(0, 255) < 26:
+        
+            # Don't if fainted from attack
+            if self.currentHP[o][self.currentPokemon[o]] > 0:
+                
+                # Don't if substitute exist or existed
+                if self.substitute[o] <= 0 and not substituteBroke:
+                    
+                    # Only if no other freeze currently exists
                     freezeClause = False
                     for iP in range(1, 7):
-                        if self.trainers[o].pokemon[iP].frozen:
+                        if self.frozen[o][iP]:
                             freezeClause = True
+                            break
                     if not freezeClause:
-                        if not self.trainers[o].pokemon[self.trainers[o].cP].paralyzed:
-                            if self.trainers[o].pokemon[self.trainers[o].cP].sleeping <= 0:
-                                self.trainers[o].pokemon[self.trainers[o].cP].frozen = True
-                                if self.printMe:
-                                    print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' was frozen!')
+                        
+                        # Unless already paralyzed
+                        if not self.paralyzed[o][self.currentPokemon[o]]:
+                            
+                            # Unless already sleeping
+                            if self.sleeping[o][self.currentPokemon[o]] <= 0:
+                            
+                                self.frozen[o][self.currentPokemon[o]] = True
+                                self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' was frozen!\n')
                             else:
-                                if self.printMe:
-                                    print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already sleeping!')
+                                self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already sleeping!\n')
                         else:
-                            if self.printMe:
-                                print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already paralyzed!')
+                            self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already paralyzed!\n')
                     else:
-                        if self.printMe:
-                            print('Only one Pokémon on each team may be frozen at one time!')
+                        self.summary += ('Only one Pokémon on each team may be frozen at one time!\n')
     
     def useHyperBeam(self, t): # Tauros, Snorlax
         
-        critical = ' damage'
+        critical = ''
         level = 100
         o = (t + 1) % 2
         
         # Critical hit?
-        if np.random.randint(256) < np.floor(self.trainers[t].pokemon[self.trainers[t].cP].baseSpeed / 2):
+        if random.randint(0, 255) < pCrit[self.currentPokemon[t]]:
             level = 200
-            critical = ' critical damage'
+            critical = ' critical'
         
         damage = self.calculateDamage(
             level,
-            self.trainers[t].pokemon[self.trainers[t].cP].attack,
+            pAttack[self.currentPokemon[t]],
             150,
-            self.trainers[o].pokemon[self.trainers[o].cP].defense)
+            pDefense[self.currentPokemon[o]])
         
         # x0.5 against Rhydon
-        if self.trainers[o].pokemon[self.trainers[o].cP].index == 112:
+        if self.currentPokemon[o] == 2:
             damage = int(damage / 2)
         
         # STAB using Tauros, Snorlax
         damage = int(damage * 1.5)
         
-        [overkill, subBroke] = self.trainers[o].inflictDamage(damage, False)
-        if self.printMe:
-            self.damagePrint(o, critical, damage, overkill, subBroke)
+        substituteBroke = False
+        if self.substitute[o] <= 0:
+            self.currentHP[o][self.currentPokemon[o]] -= int(damage)
+            self.summary += ('Hyper Beam did ' + str(damage) + critical + ' damage!\n')
+        else:
+            self.substitute[o] -= int(damage)
+            self.summary += ('Hyper Beam did ' + str(damage) + critical + ' damage')
+            if self.substitute[o] <= 0:
+                substituteBroke = True
+                self.summary += (' and broke the substitute!\n')
+            else:
+                self.summary += (' to the substitute!\n')
         
-        # Force recharge
-        if self.trainers[o].pokemon[self.trainers[o].cP].cHP > 0:
-            if not subBroke:
-                self.trainers[t].recharge = True
+        # Force recharge, unless opponent fainted or substitute broke
+        if self.currentHP[o][self.currentPokemon[o]] > 0:
+            if not substituteBroke:
+                self.recharge[t] = True
     
     def useDrillPeck(self, t): # Zapdos
         
-        critical = ' damage'
+        critical = ''
         level = 100
         o = (t + 1) % 2
         
         # Critical hit?
-        if np.random.randint(256) < 50:
+        if random.randint(0, 255) < 50:
             level = 200
-            critical = ' critical damage'
+            critical = ' critical'
         
         damage = self.calculateDamage(
             level,
             278,
             80,
-            self.trainers[o].pokemon[self.trainers[o].cP].defense)
+            pDefense[self.currentPokemon[o]])
         
         # x0.5 against Rhydon, Zapdos
-        if (self.trainers[o].pokemon[self.trainers[o].cP].index == 112
-                or self.trainers[o].pokemon[self.trainers[o].cP].index == 145):
+        if self.currentPokemon[o] == 2 or self.currentPokemon[o] == 6:
             damage = int(damage / 2)
         
         # x2 against Exeggutor
-        if self.trainers[o].pokemon[self.trainers[o].cP].index == 103:
+        if self.currentPokemon[o] == 1:
             damage = int(damage * 2)
         
         # STAB using Zapdos
         damage = int(damage * 1.5)
         
-        [overkill, subBroke] = self.trainers[o].inflictDamage(damage, False)
-        if self.printMe:
-            self.damagePrint(o, critical, damage, overkill, subBroke)
+        if self.substitute[o] <= 0:
+            self.currentHP[o][self.currentPokemon[o]] -= int(damage)
+            self.summary += ('Drill Peck did ' + str(damage) + critical + ' damage!\n')
+        else:
+            self.substitute[o] -= int(damage)
+            self.summary += ('Drill Peck did ' + str(damage) + critical + ' damage')
+            if self.substitute[o] <= 0:
+                self.summary += (' and broke the substitute!\n')
+            else:
+                self.summary += (' to the substitute!\n')
     
     def useStunSpore(self, t): # Exeggutor
         
         # Can paralyze even with substitute
         
         o = (t + 1) % 2
-        if not self.trainers[o].pokemon[self.trainers[o].cP].frozen:
-            if not self.trainers[o].pokemon[self.trainers[o].cP].paralyzed:
-                if self.trainers[o].pokemon[self.trainers[o].cP].sleeping <= 0:
-                    self.trainers[o].pokemon[self.trainers[o].cP].paralyzed = True
-                    if self.printMe:
-                        print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' was paralyzed!')
+        
+        # Unless already frozen
+        if not self.frozen[o][self.currentPokemon[o]]:
+            
+            # Unless already paralyzed
+            if not self.paralyzed[o][self.currentPokemon[o]]:
+                
+                # Unless already sleeping
+                if self.sleeping[o][self.currentPokemon[o]] <= 0:
+                    
+                    self.paralyzed[o][self.currentPokemon[o]] = True
+                    self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' was paralyzed!\n')
                 else:
-                    if self.printMe:
-                        print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already sleeping!')
+                    self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already sleeping!\n')
             else:
-                if self.printMe:
-                    print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already paralyzed!')
+                self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already paralyzed!\n')
         else:
-            if self.printMe:
-                print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already frozen!')
+            self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already frozen!\n')
     
     def useSleepPowder(self, t): # Exeggutor
         
         # Can sleep even with substitute
         
         o = (t + 1) % 2
+        
+        # Only if no other sleep currently exists
         sleepClause = False
         for iP in range(1, 7):
-            if self.trainers[o].pokemon[iP].sleeping > 0:
+            if self.sleeping[o][iP] > 0:
                 sleepClause = True
+                break
         if not sleepClause:
-            if not self.trainers[o].pokemon[self.trainers[o].cP].frozen:
-                if not self.trainers[o].pokemon[self.trainers[o].cP].paralyzed:
-                    self.trainers[o].pokemon[self.trainers[o].cP].sleeping = 1 + np.random.randint(7)
-                    self.trainers[o].recharge = False
-                    if self.printMe:
-                        print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' fell asleep!')
+            
+            # Unless already frozen
+            if not self.frozen[o][self.currentPokemon[o]]:
+                
+                # Unless already paralyzed
+                if not self.paralyzed[o][self.currentPokemon[o]]:
+                    
+                    self.sleeping[o][self.currentPokemon[o]] = random.randint(1, 7)
+                    self.recharge[o] = False
+                    self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' fell asleep!\n')
                 else:
-                    if self.printMe:
-                        print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already paralyzed!')
+                    self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already paralyzed!\n')
             else:
-                if self.printMe:
-                    print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already frozen!')
+                self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already frozen!\n')
         else:
-            if self.printMe:
-                print('Only one Pokémon on each team may be sleeping at one time!')
+            self.summary += ('Only one Pokémon on each team may be sleeping at one time!\n')
     
     def useThunderbolt(self, t): # Chansey, Zapdos
         
-        critical = ' damage'
+        critical = ''
         o = (t + 1) % 2
         
         # Critical hit?
-        if np.random.randint(256) < np.floor(self.trainers[t].pokemon[self.trainers[t].cP].baseSpeed / 2):
+        if random.randint(0, 255) < pCrit[self.currentPokemon[t]]:
             damage = self.calculateDamage(
                 200,
-                self.trainers[t].pokemon[self.trainers[t].cP].special,
+                pSpecial[self.currentPokemon[t]],
                 95,
-                self.trainers[o].pokemon[self.trainers[o].cP].special)
-            critical = ' critical damage'
+                pSpecial[self.currentPokemon[o]])
+            critical = ' critical'
         else:
             damage = self.calculateDamage(
                 100,
-                np.floor(
-                    c.statMods[self.trainers[t].specialMod]
-                    * self.trainers[t].pokemon[self.trainers[t].cP].special / 100),
+                int(statMods[self.specialMod[t]] * pSpecial[self.currentPokemon[t]] / 100),
                 95,
-                np.floor(
-                    c.statMods[self.trainers[o].specialMod]
-                    * self.trainers[o].pokemon[self.trainers[o].cP].special / 100))
+                int(statMods[self.specialMod[o]] * pSpecial[self.currentPokemon[o]] / 100))
         
         # x0 against Rhydon
-        if self.trainers[o].pokemon[self.trainers[o].cP].index == 112:
+        if self.currentPokemon[o] == 2:
             damage = 0
-            critical = ' damage'
+            critical = ''
         
         # x0.5 against Exeggutor
-        if self.trainers[o].pokemon[self.trainers[o].cP].index == 103:
+        if self.currentPokemon[o] == 1:
             damage = int(damage / 2)
         
         # STAB using Zapdos
-        if self.trainers[t].pokemon[self.trainers[t].cP].index == 145:
+        if self.currentPokemon[t] == 6:
             damage = int(damage * 1.5)
         
-        [overkill, subBroke] = self.trainers[o].inflictDamage(damage, False)
-        if self.printMe:
-            self.damagePrint(o, critical, damage, overkill, subBroke)
+        substituteBroke = False
+        if self.substitute[o] <= 0:
+            self.currentHP[o][self.currentPokemon[o]] -= int(damage)
+            self.summary += ('Thunderbolt did ' + str(damage) + critical + ' damage!\n')
+        else:
+            self.substitute[o] -= int(damage)
+            self.summary += ('Thunderbolt did ' + str(damage) + critical + ' damage')
+            if self.substitute[o] <= 0:
+                substituteBroke = True
+                self.summary += (' and broke the substitute!\n')
+            else:
+                self.summary += (' to the substitute!\n')
         
-        # Paralyze except against Zapdos
-        if self.trainers[o].pokemon[self.trainers[o].cP].index != 145:
+        # 10%: Paralyze
+        if random.randint(0, 255) < 26:
             
-            if self.trainers[o].pokemon[self.trainers[o].cP].cHP > 0:
+            # Can not paralyze Zapdos
+            if self.currentPokemon[o] != 6:
                 
-                # Can not paralyze substitute, even if broken
-                if self.trainers[o].substitute <= 0 and not subBroke:
+                # Don't if fainted from attack
+                if self.currentHP[o][self.currentPokemon[o]] > 0:
                     
-                    # 10%: paralyze
-                    if np.random.randint(256) < 26:
-                        if not self.trainers[o].pokemon[self.trainers[o].cP].frozen:
-                            if not self.trainers[o].pokemon[self.trainers[o].cP].paralyzed:
-                                if self.trainers[o].pokemon[self.trainers[o].cP].sleeping <= 0:
-                                    self.trainers[o].pokemon[self.trainers[o].cP].paralyzed = True
-                                    if self.printMe:
-                                        print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' was paralyzed!')
+                    # Don't if substitute exist or existed
+                    if self.substitute[o] <= 0 and not substituteBroke:
+                        
+                        # Unless already frozen
+                        if not self.frozen[o][self.currentPokemon[o]]:
+                            
+                            # Unless already paralyzed
+                            if not self.paralyzed[o][self.currentPokemon[o]]:
+                                
+                                # Unless already sleeping
+                                if self.sleeping[o][self.currentPokemon[o]] <= 0:
+                                    
+                                    self.paralyzed[o][self.currentPokemon[o]] = True
+                                    self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' was paralyzed!\n')
                                 else:
-                                    if self.printMe:
-                                        print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already sleeping!')
+                                    self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already sleeping!\n')
                             else:
-                                if self.printMe:
-                                    print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already paralyzed!')
+                                self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already paralyzed!\n')
                         else:
-                            if self.printMe:
-                                print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already frozen!')
+                            self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already frozen!\n')
     
     def useThunderWave(self, t): # Chansey, Zapdos
         
@@ -545,307 +814,286 @@ class Game:
         
         o = (t + 1) % 2
         
-        # Paralyze except against Rhydon
-        if self.trainers[o].pokemon[self.trainers[o].cP].index != 112:
+        # Can not paralyze Rhydon
+        if self.currentPokemon[o] != 2:
             
-            if not self.trainers[o].pokemon[self.trainers[o].cP].frozen:
-                if not self.trainers[o].pokemon[self.trainers[o].cP].paralyzed:
-                    if self.trainers[o].pokemon[self.trainers[o].cP].sleeping <= 0:
-                        self.trainers[o].pokemon[self.trainers[o].cP].paralyzed = True
-                        if self.printMe:
-                            print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' was paralyzed!')
+            # Unless already frozen
+            if not self.frozen[o][self.currentPokemon[o]]:
+                
+                # Unless already paralyzed
+                if not self.paralyzed[o][self.currentPokemon[o]]:
+                    
+                    # Unless already sleeping
+                    if self.sleeping[o][self.currentPokemon[o]] <= 0:
+                        self.paralyzed[o][self.currentPokemon[o]] = True
+                        self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' was paralyzed!\n')
                     else:
-                        if self.printMe:
-                            print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already sleeping!')
+                        self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already sleeping!\n')
                 else:
-                    if self.printMe:
-                        print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already paralyzed!')
+                    self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already paralyzed!\n')
             else:
-                if self.printMe:
-                    print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + ' is already frozen!')
+                self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + ' is already frozen!\n')
         else:
-            if self.printMe:
-                print('It has no effect against ' + self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + '!')
+            self.summary += ('It has no effect against ' + self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + '!\n')
     
     def useEarthquake(self, t): # Rhydon, Tauros, Snorlax
         
-        critical = ' damage'
+        critical = ''
         level = 100
         o = (t + 1) % 2
         
         # Critical hit?
-        if np.random.randint(256) < np.floor(self.trainers[t].pokemon[self.trainers[t].cP].baseSpeed / 2):
+        if random.randint(0, 255) < pCrit[self.currentPokemon[t]]:
             level = 200
-            critical = ' critical damage'
+            critical = ' critical'
         
         damage = self.calculateDamage(
             level,
-            self.trainers[t].pokemon[self.trainers[t].cP].attack,
+            pAttack[self.currentPokemon[t]],
             100,
-            self.trainers[o].pokemon[self.trainers[o].cP].defense)
+            pDefense[self.currentPokemon[o]])
         
         # x0 against Zapdos
-        if self.trainers[o].pokemon[self.trainers[o].cP].index == 145:
+        if self.currentPokemon[o] == 6:
             damage = 0
-            critical = ' damage'
+            critical = ''
         
         # x0.5 against Exeggutor
-        if self.trainers[o].pokemon[self.trainers[o].cP].index == 103:
+        if self.currentPokemon[o] == 1:
             damage = int(damage / 2)
         
         # x2 against Rhydon
-        if self.trainers[o].pokemon[self.trainers[o].cP].index == 112:
+        if self.currentPokemon[o] == 2:
             damage = int(damage * 2)
         
         # STAB using Rhydon
-        if self.trainers[t].pokemon[self.trainers[t].cP].index == 112:
+        if self.currentPokemon[t] == 2:
             damage = int(damage * 1.5)
         
-        [overkill, subBroke] = self.trainers[o].inflictDamage(damage, False)
-        if self.printMe:
-            self.damagePrint(o, critical, damage, overkill, subBroke)
+        if self.substitute[o] <= 0:
+            self.currentHP[o][self.currentPokemon[o]] -= int(damage)
+            self.summary += ('Earthquake did ' + str(damage) + critical + ' damage!\n')
+        else:
+            self.substitute[o] -= int(damage)
+            self.summary += ('Earthquake did ' + str(damage) + critical + ' damage')
+            if self.substitute[o] <= 0:
+                self.summary += (' and broke the substitute!\n')
+            else:
+                self.summary += (' to the substitute!\n')
     
     def usePsychic(self, t): # Exeggutor
         
-        critical = ' damage'
+        critical = ''
         o = (t + 1) % 2
         
         # Critical hit?
-        if np.random.randint(256) < 22:
+        if random.randint(0, 255) < 22:
             damage = self.calculateDamage(
                 200,
                 348,
                 90,
-                self.trainers[o].pokemon[self.trainers[o].cP].special)
-            critical = ' critical damage'
+                pSpecial[self.currentPokemon[o]])
+            critical = ' critical'
         else:
             damage = self.calculateDamage(
                 100,
-                np.floor(c.statMods[self.trainers[t].specialMod] * 348 / 100),
+                int(statMods[self.specialMod[t]] * 348 / 100),
                 90,
-                np.floor(
-                    c.statMods[self.trainers[o].specialMod]
-                    * self.trainers[o].pokemon[self.trainers[o].cP].special / 100))
+                int(statMods[self.specialMod[o]] * pSpecial[self.currentPokemon[o]] / 100))
         
         # x0.5 against Exeggutor
-        if self.trainers[o].pokemon[self.trainers[o].cP].index == 103:
+        if self.currentPokemon[o] == 1:
             damage = int(damage / 2)
         
         # STAB using Exeggutor
         damage = int(damage * 1.5)
         
-        [overkill, subBroke] = self.trainers[o].inflictDamage(damage, False)
-        if self.printMe:
-            self.damagePrint(o, critical, damage, overkill, subBroke)
+        substituteBroke = False
+        if self.substitute[o] <= 0:
+            self.currentHP[o][self.currentPokemon[o]] -= int(damage)
+            self.summary += ('Psychic did ' + str(damage) + critical + ' damage!\n')
+        else:
+            self.substitute[o] -= int(damage)
+            self.summary += ('Psychic did ' + str(damage) + critical + ' damage')
+            if self.substitute[o] <= 0:
+                substituteBroke = True
+                self.summary += (' and broke the substitute!\n')
+            else:
+                self.summary += (' to the substitute!\n')
         
-        if self.trainers[o].pokemon[self.trainers[o].cP].cHP > 0:
+        # 33.2%: Decrease special
+        if random.randint(0, 255) < 85:
             
-            # Can not decrease special if there's a substitute, even if broken
-            if self.trainers[o].substitute <= 0 and not subBroke:
+            # Unless fainted from the attack
+            if self.currentHP[o][self.currentPokemon[o]] > 0:
                 
-                # 33.2%: decrease special
-                if np.random.randint(256) < 85:
-                    if self.trainers[o].specialMod > 0:
-                        self.trainers[o].specialMod -= 1
-                        if self.printMe:
-                            print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + '\'s special fell!')
+                # Don't if substitute exist or existed
+                if self.substitute[o] <= 0 and not substituteBroke:
+                    
+                    # Don't if at minimum
+                    if self.specialMod[o] > 0:
+                        self.specialMod[o] -= 1
+                        self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + '\'s special fell!\n')
                     else:
-                        if self.printMe:
-                            print(self.trainers[o].name + '\'s ' + self.trainers[o].pokemon[self.trainers[o].cP].name + '\'s special can not be decreased more!')
+                        self.summary += (self.names[o] + '\'s ' + pNames[self.currentPokemon[o]] + '\'s special can not be decreased more!\n')
     
     def useAgility(self, t): # Zapdos
         
-        if self.trainers[t].speedMod < 12:
-            self.trainers[t].speedMod += 2
-            if self.printMe:
-                print(self.trainers[t].name + '\'s ' + self.trainers[t].pokemon[self.trainers[t].cP].name + '\'s speed greatly rose!')
+        if self.speedMod[t] < 12:
+            self.speedMod[t] += 2
+            self.summary += (self.names[t] + '\'s Zapdos\'s speed greatly rose!\n')
         else:
-            if self.printMe:
-                print(self.trainers[t].name + '\'s ' + self.trainers[t].pokemon[self.trainers[t].cP].name + '\'s speed can not rise more!')
+            self.summary += (self.names[t] + '\'s Zapdos\'s speed can not rise more!\n')
     
     def useSelfdestruct(self, t, hit): # Snorlax
         
         if hit:
-            critical = ' damage'
+            critical = ''
             level = 100
             o = (t + 1) % 2
             
             # Critical hit?
-            if np.random.randint(256) < 15:
+            if random.randint(0, 255) < 15:
                 level = 200
-                critical = ' critical damage'
+                critical = ' critical'
             
             damage = self.calculateDamage(
                 level,
                 318,
-                130,
-                np.floor(self.trainers[o].pokemon[self.trainers[o].cP].defense / 2))
+                260,
+                pDefense[self.currentPokemon[o]])
             
             # x0.5 against Rhydon
-            if self.trainers[o].pokemon[self.trainers[o].cP].index == 112:
+            if self.currentPokemon[o] == 2:
                 damage = int(damage / 2)
             
             # STAB using Snorlax
             damage = int(damage * 1.5)
             
-            [overkill, subBroke] = self.trainers[o].inflictDamage(damage, False)
-            if self.printMe:
-                self.damagePrint(o, critical, damage, overkill, subBroke)
-            if not subBroke:
-                self.trainers[t].inflictDamage(self.trainers[t].pokemon[self.trainers[t].cP].cHP, True)
+            substituteBroke = False
+            if self.substitute[o] <= 0:
+                self.currentHP[o][self.currentPokemon[o]] -= int(damage)
+                self.summary += ('Selfdestruct did ' + str(damage) + critical + ' damage!\n')
+            else:
+                self.substitute[o] -= int(damage)
+                self.summary += ('Selfdestruct did ' + str(damage) + critical + ' damage')
+                if self.substitute[o] <= 0:
+                    substituteBroke = True
+                    self.summary += (' and broke the substitute!\n')
+                else:
+                    self.summary += (' to the substitute!\n')
+            
+            if not substituteBroke:
+                self.currentHP[t][5] = 0
         else:
-            self.trainers[t].inflictDamage(self.trainers[t].pokemon[self.trainers[t].cP].cHP, True)
+            self.currentHP[t][5] = 0
     
     def useSoftboiled(self, t): # Chansey
         
-        healed = self.trainers[t].healDamage(351)
-        if self.printMe:
-            print('Softboiled healed for ' + str(healed) + ' damage!')
+        self.currentHP[t][3] += 351
+        if self.currentHP[t][3] > 703:
+            overheal = self.currentHP[t][3] - 703
+            self.currentHP[t][3] = 703
+            self.summary += ('Softboiled healed for ' + str(351 - overheal) + ' damage!\n')
+        else:
+            self.summary += ('Softboiled healed for ' + str(351) + ' damage!\n')
     
     def useExplosion(self, t, hit): # Exeggutor
         
         if hit:
-            critical = ' damage'
+            critical = ''
             level = 100
             o = (t + 1) % 2
             
             # Critical hit?
-            if np.random.randint(256) < 22:
+            if random.randint(0, 255) < 22:
                 level = 200
-                critical = ' critical damage'
+                critical = ' critical'
             
             damage = self.calculateDamage(
                 level,
                 288,
-                170,
-                np.floor(self.trainers[o].pokemon[self.trainers[o].cP].defense / 2))
+                340,
+                pDefense[self.currentPokemon[o]])
             
             # x0.5 against Rhydon
-            if self.trainers[o].pokemon[self.trainers[o].cP].index == 112:
+            if self.currentPokemon[o] == 2:
                 damage = int(damage / 2)
             
-            [overkill, subBroke] = self.trainers[o].inflictDamage(damage, False)
-            if self.printMe:
-                self.damagePrint(o, critical, damage, overkill, subBroke)
-            if not subBroke:
-                self.trainers[t].inflictDamage(self.trainers[t].pokemon[self.trainers[t].cP].cHP, True)
+            substituteBroke = False
+            if self.substitute[o] <= 0:
+                self.currentHP[o][self.currentPokemon[o]] -= int(damage)
+                self.summary += ('Explosion did ' + str(damage) + critical + ' damage!\n')
+            else:
+                self.substitute[o] -= int(damage)
+                self.summary += ('Explosion did ' + str(damage) + critical + ' damage')
+                if self.substitute[o] <= 0:
+                    substituteBroke = True
+                    self.summary += (' and broke the substitute!\n')
+                else:
+                    self.summary += (' to the substitute!\n')
+            
+            if not substituteBroke:
+                self.currentHP[t][1] = 0
         else:
-            self.trainers[t].inflictDamage(self.trainers[t].pokemon[self.trainers[t].cP].cHP, True)
+            self.currentHP[t][1] = 0
     
     def useRockSlide(self, t): # Rhydon
         
-        critical = ' damage'
+        critical = ''
         level = 100
         o = (t + 1) % 2
         
         # Critical hit?
-        if np.random.randint(256) < np.floor(self.trainers[t].pokemon[self.trainers[t].cP].baseSpeed / 2):
+        if random.randint(0, 255) < 20:
             level = 200
-            critical = ' critical damage'
+            critical = ' critical'
         
         damage = self.calculateDamage(
             level,
             358,
             75,
-            self.trainers[o].pokemon[self.trainers[o].cP].defense)
+            pDefense[self.currentPokemon[o]])
         
         # x0.5 against Rhydon
-        if self.trainers[o].pokemon[self.trainers[o].cP].index == 112:
+        if self.currentPokemon[o] == 2:
             damage = int(damage / 2)
         
         # x2 against Zapdos
-        if self.trainers[o].pokemon[self.trainers[o].cP].index == 145:
+        if self.currentPokemon[o] == 6:
             damage = int(damage * 2)
         
         # STAB using Rhydon
         damage = int(damage * 1.5)
         
-        [overkill, subBroke] = self.trainers[o].inflictDamage(damage, False)
-        if self.printMe:
-            self.damagePrint(o, critical, damage, overkill, subBroke)
+        if self.substitute[o] <= 0:
+            self.currentHP[o][self.currentPokemon[o]] -= int(damage)
+            self.summary += ('Rock Slide did ' + str(damage) + critical + ' damage!\n')
+        else:
+            self.substitute[o] -= int(damage)
+            self.summary += ('Rock Slide did ' + str(damage) + critical + ' damage')
+            if self.substitute[o] <= 0:
+                self.summary += (' and broke the substitute!\n')
+            else:
+                self.summary += (' to the substitute!\n')
     
     def useSubstitute(self, t): # Rhydon
         
-        if self.trainers[t].substitute <= 0:
-            if self.trainers[t].pokemon[self.trainers[t].cP].cHP > 103:
-                self.trainers[t].inflictDamage(103, False)
-                self.trainers[t].substitute = 104
-                if self.printMe:
-                    print(self.trainers[t].name + '\'s Rhydon did 103 damage to itself and created a substitute with 104 hit points!')
-            elif self.trainers[t].pokemon[self.trainers[t].cP].cHP < 103:
-                if self.printMe:
-                    print(self.trainers[t].name + '\'s Rhydon\'s health is too low to create a substitute!')
+        if self.substitute[t] <= 0:
+            if self.currentHP[t][2] > 103:
+                self.currentHP[t][2] -= 103
+                self.substitute[t] = 104
+                self.summary += (self.names[t] + '\'s Rhydon did 103 damage to itself and created a substitute with 104 hit points!\n')
+            elif self.currentHP[t][2] < 103:
+                self.summary += (self.names[t] + '\'s Rhydon\'s health is too low to create a substitute!\n')
             else:
-                self.trainers[t].inflictDamage(103, False)
-                if self.printMe:
-                    print(self.trainers[t].name + '\'s Rhydon did 103 damage to itself!')
+                self.currentHP[t][2] = 0
+                self.summary += (self.names[t] + '\'s Rhydon did 103 damage to itself!\n')
         else:
-            if self.printMe:
-                print(self.trainers[t].name + '\'s Rhydon already has a substitute!')
-    
-    def useStruggle(self, t): # All Pokémon
-        
-        critical = ' damage'
-        level = 100
-        o = (t + 1) % 2
-        
-        # Critical hit?
-        if np.random.randint(256) < np.floor(self.trainers[t].pokemon[self.trainers[t].cP].baseSpeed / 2):
-            level = 200
-            critical = ' critical damage'
-        
-        damage = self.calculateDamage(
-            level,
-            self.trainers[t].pokemon[self.trainers[t].cP].attack,
-            50,
-            self.trainers[o].pokemon[self.trainers[o].cP].defense)
-        
-        # x0.5 against Rhydon
-        if self.trainers[o].pokemon[self.trainers[o].cP].index == 112:
-            damage = int(damage / 2)
-        
-        # STAB using Chansey, Tauros, Snorlax
-        if (self.trainers[t].pokemon[self.trainers[t].cP].index == 113
-                or self.trainers[t].pokemon[self.trainers[t].cP].index == 128
-                or self.trainers[t].pokemon[self.trainers[t].cP].index == 143):
-            damage = int(damage * 1.5)
-        
-        [overkill, subBroke] = self.trainers[o].inflictDamage(damage, False)
-        if self.printMe:
-            self.damagePrint(o, critical, damage, overkill, subBroke)
-        if not subBroke:
-            [overkill, subBroke] = self.trainers[t].inflictDamage(int(damage / 2), True)
-            if self.printMe:
-                if overkill == 0:
-                    print('Struggle did ' + str(int(damage / 2)) + ' recoil damage!')
-                else:
-                    print('Struggle did ' + str(int(damage / 2)) + ' recoil damage! ' + str(overkill) + ' overkill!')
+            self.summary += (self.names[t] + '\'s Rhydon already has a substitute!\n')
     
     def calculateDamage(self, level, attack, power, defense):
         
-        # Calculate raw damage
-        factor1 = 2 + np.floor(2 * level / 5)
-        factor2 = power * attack
-        denominator = 50 * defense
-        unmodified = 2 + np.floor(factor1 * factor2 / denominator)
-        
-        # Apply random modifier
-        rand = np.random.randint(217, 256)
-        damage = np.floor(unmodified * rand / 255)
-        
-        return int(damage)
-    
-    def damagePrint(self, t, critical, damage, overkill, subBroke):
-        
-        move = self.trainers[(t + 1) % 2].pokemon[self.trainers[(t + 1) % 2].cP].moves[self.trainers[(t + 1) % 2].nextAction[1]].name
-        if self.trainers[t].substitute <= 0 and not subBroke:
-            if overkill == 0:
-                print(move + ' did ' + str(damage) + critical + '!')
-            else:
-                print(move + ' did ' + str(damage) + critical + '! ' + str(overkill) + ' overkill!')
-        elif self.trainers[t].substitute > 0:
-            print(move + ' did ' + str(damage) + critical + ' to the substitute!')
-        elif subBroke:
-            print(move + ' did ' + str(damage) + critical + ' and broke the substitute! ' + str(overkill) + ' overkill!')
+        return int(random.randint(217, 255) * (2 + int((2 + int(2 * level / 5)) * power * attack / (50 * defense))) / 255)
 
 #

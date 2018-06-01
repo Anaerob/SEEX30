@@ -1,15 +1,15 @@
-import numpy as np
+import math
 import time
 
-import Constants as c
-import Game
 import FormatTime
+import Game
 import RandomAI
+import Sim
 
 def main():
     
     # Parameters
-    nGames = 1000
+    nGames = 100000
     limit = 100
     
     # Initialize
@@ -21,24 +21,28 @@ def main():
         if iGame % int(nGames / 10) == 0:
             print('Completed ' + str(int(100 * iGame / nGames)) + '%')
         iTime = time.time()
-        game = Game.Game(False)
+        game = Sim.Sim()
         while game.running and game.round < limit:
-            states = [game.getState(c.amBlack), game.getState(c.amWhite)]
+            states = [game.getState(True), game.getState(False)]
+            
             if game.forceSwitch[0] == game.forceSwitch[1]:
-                game.trainers[0].setNextAction(AI[0].getAction(states[0]))
-                game.trainers[1].setNextAction(AI[1].getAction(states[1]))
+                game.nextAction[0] = AI[0].getAction(states[0])
+                game.nextAction[1] = AI[1].getAction(states[1])
             else:
                 for iT in range(2):
                     if game.forceSwitch[iT]:
-                        game.trainers[iT].setNextAction(AI[iT].getAction(states[iT]))
+                        game.nextAction[iT] = AI[iT].getAction(states[iT])
             game.progress()
         runTimes.append(time.time() - iTime)
-    sum = np.sum(runTimes)
-    mean = sum / nGames
-    standardDeviation = np.sqrt(np.sum((runTimes - mean) ** 2) / (nGames))
+    tSum = sum(runTimes)
+    mean = tSum / nGames
+    distance = []
+    for i in range(nGames):
+        distance.append((runTimes[i] - mean) ** 2)
+    standardDeviation = math.sqrt(sum(distance) / nGames)
     print(
         'Completed 100%' + '\n'
-        + 'Sum: ' + FormatTime.getString(sum) + '\n'
+        + 'Sum: ' + FormatTime.getString(tSum) + '\n'
         + 'Mean: ' + FormatTime.getString(mean) + '\n'
         + 'Standard deviation: ' + FormatTime.getString(standardDeviation))
 
