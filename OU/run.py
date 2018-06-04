@@ -4,7 +4,6 @@ import sys
 import threading
 import time
 
-import Constants as c
 import Game
 import Load
 import MonteCarloTreeSearchAI
@@ -13,7 +12,7 @@ import User
 
 def setAction(game, t, AI, state):
     
-    game.trainers[t].setNextAction(AI.getAction(state))
+    game.nextAction[t] = AI.getAction(state)
 
 def main(id):
     
@@ -55,9 +54,9 @@ def main(id):
     resultsFile.close()
     
     # Run the battle
-    game = Game.Game(True)
+    game = Game.Game()
     while game.running:
-        states = [game.getState(c.amBlack), game.getState(c.amWhite)]
+        states = [game.getState(True), game.getState(False)]
         if game.forceSwitch[0] == game.forceSwitch[1]:
             thread0 = threading.Thread(target=setAction, args=(game, 0, AI[0], states[0]))
             thread0.daemon = True
@@ -77,14 +76,17 @@ def main(id):
         else:
             for iT in range(2):
                 if game.forceSwitch[iT]:
-                    game.trainers[iT].setNextAction(AI[iT].getAction(states[iT]))
-        stdout = sys.stdout
-        sys.stdout = io.StringIO()
+                    game.nextAction[iT] = AI[iT].getAction(states[iT])
+        #stdout = sys.stdout
+        #sys.stdout = io.StringIO()
         game.progress()
-        gamePrint = sys.stdout.getvalue()
-        gamePrintFile.write(gamePrint)
-        sys.stdout = stdout
-        print(gamePrint[0:(len(gamePrint) - 1)])
+        summary = game.getSummary()
+        print(summary[0:(len(summary) - 1)])
+        gamePrintFile.write(summary)
+        #gamePrint = sys.stdout.getvalue()
+        #gamePrintFile.write(gamePrint)
+        #sys.stdout = stdout
+        #print(gamePrint[0:(len(gamePrint) - 1)])
     gamePrintFile.close()
     
     # Save the results
