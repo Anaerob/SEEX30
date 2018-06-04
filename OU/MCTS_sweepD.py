@@ -1,8 +1,6 @@
-import numpy as np
 import os
 import time
 
-import Constants as c
 import FormatTime
 import Game
 import Load
@@ -12,8 +10,8 @@ import RandomAI
 def main():
     
     # Parameters
-    nGames = 100
-    depth = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    nGames = 10
+    depth = [1, 10, 20, 30, 40, 50]
     epsilon = 0.1
     limit = 100
     search = 250
@@ -57,16 +55,16 @@ def main():
         AI = [MonteCarloTreeSearchAI.AI(depth[iDepth], epsilon, limit, search, temperature), RandomAI.AI()]
         for iGame in range(startGame, nGames):
             iTime = time.time()
-            game = Game.Game(False)
+            game = Game.Game()
             while game.running and game.round < limit:
-                states = [game.getState(c.amBlack), game.getState(c.amWhite)]
+                states = [game.getState(True), game.getState(False)]
                 if game.forceSwitch[0] == game.forceSwitch[1]:
-                    game.trainers[0].setNextAction(AI[0].getAction(states[0]))
-                    game.trainers[1].setNextAction(AI[1].getAction(states[1]))
+                    game.nextAction[0] = AI[0].getAction(states[0])
+                    game.nextAction[1] = AI[1].getAction(states[1])
                 else:
                     for iT in range(2):
                         if game.forceSwitch[iT]:
-                            game.trainers[iT].setNextAction(AI[iT].getAction(states[iT]))
+                            game.nextAction[iT] = AI[iT].getAction(states[iT])
                 game.progress()
             runTime += time.time() - iTime
             if game.win[0] and game.win[1]:

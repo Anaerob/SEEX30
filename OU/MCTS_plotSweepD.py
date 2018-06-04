@@ -3,12 +3,11 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 
-import Constants as c
 import Load
 
 def plot(title, yName, yLabel):
     
-    dSweep = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    dSweep = [1, 10, 20, 30, 40, 50]
     y = Load.loadFloatArray('MCTS_sweepD_results/MCTS_sweepD_' + yName, len(dSweep))
     plt.figure()
     plt.plot(dSweep, y, 'x')

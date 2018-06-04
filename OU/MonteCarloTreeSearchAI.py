@@ -1,9 +1,7 @@
 import numpy as np
-import time
+import random
 
-import Game
-import Constants as c
-import RandomAI
+import Sim
 
 
 class AI:
@@ -22,50 +20,47 @@ class AI:
     
     def getAction(self, state):
         
-        randomAI = RandomAI.AI()
         strategyTries = [{}, {}]
         strategyWins = [{}, {}]
         iSearch = 0
         while self.searchNotFinished or self.extendSearch:
             
             # Initialize a simulation starting from the given state
-            sim = Game.Game(False, state)
+            sim = Sim.Sim(state)
             for iT in range(2):
-                sim.trainers[iT].resetNextAction()
+                sim.nextAction[iT] = 0
             simStart = sim.round
-            simTime = time.time()
             tryingNow = ['', '']
             
             guaranteedAction = 0
-            actions = self.getAllowedActions(state)
+            actions = self.getAllowedActions(sim.currentHP[0], sim.currentPP[0][sim.currentPokemon[0]], sim.currentPokemon[0], sim.forceSwitch[0])
             for iAction in range(len(actions)):
                 if str(actions[iAction]) not in strategyTries[0]:
                     guaranteedAction = actions[iAction]
                     break
             
             while sim.running and sim.round - simStart < self.limit:
-                states = [sim.getState(c.amBlack), sim.getState(c.amWhite)]
-                
+                states = [sim.getState(True), sim.getState(False)]
                 if sim.round - simStart >= self.depth:
                     if sim.forceSwitch[0] == sim.forceSwitch[1]:
-                        sim.trainers[0].setNextAction(randomAI.getAction(states[0]))
-                        sim.trainers[1].setNextAction(randomAI.getAction(states[1]))
+                        sim.nextAction[0] = random.choice(self.getAllowedActions(sim.currentHP[0], sim.currentPP[0][sim.currentPokemon[0]], sim.currentPokemon[0], sim.forceSwitch[0]))
+                        sim.nextAction[1] = random.choice(self.getAllowedActions(sim.currentHP[1], sim.currentPP[1][sim.currentPokemon[1]], sim.currentPokemon[1], sim.forceSwitch[1]))
                     else:
                         for iT in range(2):
                             if sim.forceSwitch[iT]:
-                                sim.trainers[iT].setNextAction(randomAI.getAction(states[iT]))
+                                sim.nextAction[iT] = random.choice(self.getAllowedActions(sim.currentHP[iT], sim.currentPP[iT][sim.currentPokemon[iT]], sim.currentPokemon[iT], sim.forceSwitch[iT]))
                     sim.progress()
                 
                 else:
                     if sim.forceSwitch[0] == sim.forceSwitch[1]:
-                        choice = []
+                        nextAction = []
                         for iT in range(2):
                             if guaranteedAction != 0:
-                                choice.append(guaranteedAction)
+                                nextAction.append(guaranteedAction)
                                 guaranteedAction = 0
                             else:
-                                actions = self.getAllowedActions(states[iT])
-                                if np.random.random() < self.epsilon:
+                                actions = self.getAllowedActions(sim.currentHP[iT], sim.currentPP[iT][sim.currentPokemon[iT]], sim.currentPokemon[iT], sim.forceSwitch[iT])
+                                if random.random() < self.epsilon:
                                     Q = np.ones(len(actions))
                                 else:
                                     Q = np.array([])
@@ -77,38 +72,43 @@ class AI:
                                         else:
                                             Q = np.append(Q, self.almostGuaranteed)
                                 if self.temperature < 0.01:
-                                    iAction = Q.tolist().index(max(Q))
+                                    iChoice = Q.tolist().index(max(Q))
                                 else:
                                     policy = np.exp(Q / self.temperature) / np.sum(np.exp(Q / self.temperature), axis = 0)
-                                    iAction = np.random.choice(list(range(len(actions))), p = policy)
-                                choice.append(actions[iAction])
-                        tryingNow[0] += str(choice[0])
-                        tryingNow[1] += str(choice[1])
-                        sim.trainers[0].setNextAction(choice[0])
-                        sim.trainers[1].setNextAction(choice[1])
+                                    iChoice = np.random.choice(list(range(len(actions))), p = policy)
+                                nextAction.append(actions[iChoice])
+                        tryingNow[0] += str(nextAction[0])
+                        tryingNow[1] += str(nextAction[1])
+                        sim.nextAction[0] = nextAction[0]
+                        sim.nextAction[1] = nextAction[1]
                         sim.progress()
                     else:
                         for iT in range(2):
                             if sim.forceSwitch[iT]:
-                                actions = self.getAllowedActions(states[iT])
-                                if np.random.random() < self.epsilon:
-                                    Q = np.ones(len(actions))
+                                if guaranteedAction != 0 and iT == 0:
+                                    nextAction = guaranteedAction
+                                    guaranteedAction = 0
                                 else:
-                                    Q = np.array([])
-                                    for iAction in range(len(actions)):
-                                        iTry = tryingNow[iT]
-                                        iTry += str(actions[iAction])
-                                        if iTry in strategyTries[iT]:
-                                            Q = np.append(Q, strategyWins[iT][iTry] / strategyTries[iT][iTry])
-                                        else:
-                                            Q = np.append(Q, self.almostGuaranteed)
-                                if self.temperature < 0.01:
-                                    iAction = Q.tolist().index(max(Q))
-                                else:
-                                    policy = np.exp(Q / self.temperature) / np.sum(np.exp(Q / self.temperature), axis = 0)
-                                    iAction = np.random.choice(list(range(len(actions))), p = policy)
-                                choice = actions[iAction]
-                                sim.trainers[iT].setNextAction(choice)
+                                    actions = self.getAllowedActions(sim.currentHP[iT], sim.currentPP[iT][sim.currentPokemon[iT]], sim.currentPokemon[iT], sim.forceSwitch[iT])
+                                    if random.random() < self.epsilon:
+                                        Q = np.ones(len(actions))
+                                    else:
+                                        Q = np.array([])
+                                        for iAction in range(len(actions)):
+                                            iTry = tryingNow[iT]
+                                            iTry += str(actions[iAction])
+                                            if iTry in strategyTries[iT]:
+                                                Q = np.append(Q, strategyWins[iT][iTry] / strategyTries[iT][iTry])
+                                            else:
+                                                Q = np.append(Q, self.almostGuaranteed)
+                                    if self.temperature < 0.01:
+                                        iChoice = Q.tolist().index(max(Q))
+                                    else:
+                                        policy = np.exp(Q / self.temperature) / np.sum(np.exp(Q / self.temperature), axis = 0)
+                                        iChoice = np.random.choice(list(range(len(actions))), p = policy)
+                                    nextAction = actions[iChoice]
+                                tryingNow[iT] += str(nextAction)
+                                sim.nextAction[iT] = nextAction
                                 sim.progress()
             
             # Update and extend the search tree
@@ -131,43 +131,37 @@ class AI:
         self.searchNotFinished = True
         
         # Build final Q from the results of the tree search
-        actions = self.getAllowedActions(state)
+        sim = Sim.Sim(state)
+        actions = self.getAllowedActions(sim.currentHP[0], sim.currentPP[0][sim.currentPokemon[0]], sim.currentPokemon[0], sim.forceSwitch[0])
         Q = np.array([])
         for iAction in range(len(actions)):
             Q = np.append(Q, strategyWins[0][str(actions[iAction])] / strategyTries[0][str(actions[iAction])])
         
-        iAction = Q.tolist().index(max(Q))
-        choice = actions[iAction]
+        iChoice = Q.tolist().index(max(Q))
+        choice = actions[iChoice]
         return choice
     
-    def getAllowedActions(self, state):
+    def getAllowedActions(self, chp, cpp, cp, fs):
         
-        sim = Game.Game(False, state)
-        if sim.forceSwitch[0]:
-            actions = self.getAllowedSwitches(state)
-        else:
-            actions = [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [0, 1], [0, 2], [0, 3], [0, 4]]
+        if fs:
+            actions = [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0]]
             for iP in range(1, 7):
-                if sim.trainers[0].pokemon[iP].cHP <= 0:
+                if chp[iP] <= 0:
                     actions.remove([iP, 0])
-                elif sim.trainers[0].cP == iP:
+                elif cp == iP:
+                    actions.remove([iP, 0])
+        else:
+            actions = [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [0, 1], [0, 2], [0, 3], [0, 4]]
+            for iP in range(1, 7):
+                if chp[iP] <= 0:
+                    actions.remove([iP, 0])
+                elif cp == iP:
                     actions.remove([iP, 0])
             for iM in range(1, 5):
-                if sim.trainers[0].pokemon[sim.trainers[0].cP].moves[iM].cPP <= 0:
+                if cpp[iM] <= 0:
                     actions.remove([0, iM])
-            if len(actions) > 1:
-                actions.remove([0, 0])
+            if len(actions) == 0:
+                actions = [[0, 0]]
         return actions
-    
-    def getAllowedSwitches(self, state):
-        
-        sim = Game.Game(False, state)
-        switches = [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0]]
-        for iP in range(1, 7):
-            if sim.trainers[0].pokemon[iP].cHP <= 0:
-                switches.remove([iP, 0])
-            elif sim.trainers[0].cP == iP:
-                switches.remove([iP, 0])
-        return switches
 
 #
