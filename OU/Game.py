@@ -1,8 +1,5 @@
 import random
 
-amPlayer = True
-amAI = False
-
 # Status modifier factor
 statMods = [25, 28, 33, 40, 50, 66, 100, 150, 200, 250, 300, 350, 400]
 
