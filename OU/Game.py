@@ -3,8 +3,6 @@ import random
 amPlayer = True
 amAI = False
 
-actions = [0, [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [0, 0], [0, 1], [0, 2], [0, 3], [0, 4]]
-
 # Status modifier factor
 statMods = [25, 28, 33, 40, 50, 66, 100, 150, 200, 250, 300, 350, 400]
 
@@ -92,9 +90,9 @@ class Game:
             self.win = [False, False]
             
             # Trainer
-            self.currentPokemon = [0, 0]
+            self.currentPokemon = [1, 1]
             self.forceSwitch = [False, False]
-            self.nextAction = [[1, 0], [1, 0]]
+            self.nextAction = [0, 0]
             self.recharge = [False, False]
             self.remainingPokemon = [6, 6]
             self.substitute = [0, 0]
@@ -131,9 +129,6 @@ class Game:
                     [10, 24, 16, 8, 16],
                     [10, 24, 8, 16, 8],
                     [10, 32, 24, 32, 48]]]
-            
-            self.doSwitch(0)
-            self.doSwitch(1)
         else:
             self.setState(state)
     
