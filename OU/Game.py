@@ -26,7 +26,7 @@ pSpecial = [0, 348, 188, 308, 238, 228, 348]
 pSpeed = [0, 208, 178, 198, 318, 158, 298]
 
 # Crit
-pCrit = [0, 22, 20, 25, 55, 15, 50]
+pCrit = [0, 27, 20, 25, 55, 15, 50]
 
 # Moves
 pMoves = [
@@ -225,7 +225,8 @@ class Game:
     def getSummary(self):
         
         temp = self.summary
-        self.summary = ''
+        if not (self.forceSwitch[0] or self.forceSwitch[1]):
+            self.summary = ''
         return temp
     
     def progress(self):
@@ -250,7 +251,7 @@ class Game:
                     self.nextAction[t] = 0
         else:
             
-            self.summary += ('\n' + 'Round ' + str(self.round + 1) + '!\n\n')
+            self.summary += ('Round ' + str(self.round + 1) + '!\n\n')
             
             # Check for illegal actions
             for iT in range(2):
@@ -879,7 +880,7 @@ class Game:
         o = (t + 1) % 2
         
         # Critical hit?
-        if random.randint(0, 255) < 22:
+        if random.randint(0, 255) < 27:
             damage = self.calculateDamage(
                 200,
                 348,
@@ -998,7 +999,7 @@ class Game:
             o = (t + 1) % 2
             
             # Critical hit?
-            if random.randint(0, 255) < 22:
+            if random.randint(0, 255) < 27:
                 level = 200
                 critical = ' critical'
             

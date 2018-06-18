@@ -5,7 +5,7 @@ pAttack = [0, 288, 358, 108, 298, 318, 278]
 pDefense = [0, 268, 338, 108, 288, 228, 268]
 pSpecial = [0, 348, 188, 308, 238, 228, 348]
 pSpeed = [0, 208, 178, 198, 318, 158, 298]
-pCrit = [0, 22, 20, 25, 55, 15, 50]
+pCrit = [0, 27, 20, 25, 55, 15, 50]
 pMoves = [
     [0, 0, 0, 0, 0],
     [0, 5, 6, 10, 14],
@@ -488,7 +488,7 @@ class Sim:
     def usePsychic(self, t):
         
         o = (t + 1) % 2
-        if random.randint(0, 255) < 22:
+        if random.randint(0, 255) < 27:
             damage = self.calculateDamage(
                 200,
                 348,
@@ -559,7 +559,7 @@ class Sim:
         if hit:
             level = 100
             o = (t + 1) % 2
-            if random.randint(0, 255) < 22:
+            if random.randint(0, 255) < 27:
                 level = 200
             damage = self.calculateDamage(
                 level,
