@@ -10,8 +10,8 @@ import RandomAI
 def main():
     
     # Parameters
-    nGames = 10
-    depth = [1, 10, 20, 30, 40, 50]
+    nGames = 1000
+    depth = [1, 5, 10, 15, 20]
     epsilon = 0.1
     limit = 100
     search = 250

@@ -7,7 +7,8 @@ import Load
 
 def plot(title, yName, yLabel):
     
-    dSweep = [1, 10, 20, 30, 40, 50]
+    #dSweep = [1, 10, 20, 30, 40]
+    dSweep = [1, 5, 10, 15, 20]
     y = Load.loadFloatArray('MCTS_sweepD_results/MCTS_sweepD_' + yName, len(dSweep))
     plt.figure()
     plt.plot(dSweep, y, 'x')
