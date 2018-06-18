@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import random
 
 pHP = [0, 393, 413, 703, 353, 523, 383]
@@ -16,14 +17,16 @@ class AI:
         self.switchBias = np.zeros((6, 6))
         self.switchWeights = np.zeros((6, 6, 14))
         if load:
-            self.load()
+            loaded = self.load()
+            if not loaded:
+                exit('LinearNeuralNetworkAI: initial load failed!')
     
     def getAction(self, state):
         
         if state[6][0] and not state[4][0]:
             return [0, 0]
         else:
-            actions = self.getAllowedActions(state)
+            actions = self.getAllowedActions(state[14][0], state[15][0][state[3][0] - 1], state[3][0], state[4][0])
             if len(actions) == 1:
                 return actions[0]
             else:
@@ -38,24 +41,24 @@ class AI:
                 
                 return actions[iChoice]
     
-    def getAllowedActions(self, state):
+    def getAllowedActions(self, chp, cpp, cp, fs):
         
-        if state[4][0]:
+        if fs:
             actions = [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0]]
             for iP in range(1, 7):
-                if state[14][0][iP] <= 0:
+                if chp[iP] <= 0:
                     actions.remove([iP, 0])
-                elif state[3][0] == iP:
+                elif cp == iP:
                     actions.remove([iP, 0])
         else:
             actions = [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [0, 1], [0, 2], [0, 3], [0, 4]]
             for iP in range(1, 7):
-                if state[14][0][iP] <= 0:
+                if chp[iP] <= 0:
                     actions.remove([iP, 0])
-                elif state[3][0] == iP:
+                elif cp == iP:
                     actions.remove([iP, 0])
             for iM in range(1, 5):
-                if state[15][0][state[3][0] - 1][iM] <= 0:
+                if cpp[iM] <= 0:
                     actions.remove([0, iM])
             if len(actions) == 0:
                 actions = [[0, 0]]
