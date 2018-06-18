@@ -22,6 +22,10 @@ class AI:
         
         strategyTries = [{}, {}]
         strategyWins = [{}, {}]
+        
+        sim = Sim.Sim(state)
+        initialActions = self.getAllowedActions(sim.currentHP[0], sim.currentPP[0][sim.currentPokemon[0]], sim.currentPokemon[0], sim.forceSwitch[0])
+        
         iSearch = 0
         while self.searchNotFinished or self.extendSearch:
             
@@ -33,14 +37,12 @@ class AI:
             tryingNow = ['', '']
             
             guaranteedAction = 0
-            actions = self.getAllowedActions(sim.currentHP[0], sim.currentPP[0][sim.currentPokemon[0]], sim.currentPokemon[0], sim.forceSwitch[0])
-            for iAction in range(len(actions)):
-                if str(actions[iAction]) not in strategyTries[0]:
-                    guaranteedAction = actions[iAction]
+            for iAction in range(len(initialActions)):
+                if str(initialActions[iAction]) not in strategyTries[0]:
+                    guaranteedAction = initialActions[iAction]
                     break
             
             while sim.running and sim.round - simStart < self.limit:
-                states = [sim.getState(True), sim.getState(False)]
                 if sim.round - simStart >= self.depth:
                     if sim.forceSwitch[0] == sim.forceSwitch[1]:
                         sim.nextAction[0] = random.choice(self.getAllowedActions(sim.currentHP[0], sim.currentPP[0][sim.currentPokemon[0]], sim.currentPokemon[0], sim.forceSwitch[0]))
@@ -72,7 +74,7 @@ class AI:
                                         else:
                                             Q = np.append(Q, self.almostGuaranteed)
                                 if self.temperature < 0.01:
-                                    iChoice = Q.tolist().index(max(Q))
+                                    iChoice = random.choice([i for i, x in enumerate(Q) if x == max(Q)])
                                 else:
                                     policy = np.exp(Q / self.temperature) / np.sum(np.exp(Q / self.temperature), axis = 0)
                                     iChoice = np.random.choice(list(range(len(actions))), p = policy)
@@ -102,7 +104,7 @@ class AI:
                                             else:
                                                 Q = np.append(Q, self.almostGuaranteed)
                                     if self.temperature < 0.01:
-                                        iChoice = Q.tolist().index(max(Q))
+                                        iChoice = random.choice([i for i, x in enumerate(Q) if x == max(Q)])
                                     else:
                                         policy = np.exp(Q / self.temperature) / np.sum(np.exp(Q / self.temperature), axis = 0)
                                         iChoice = np.random.choice(list(range(len(actions))), p = policy)
@@ -131,15 +133,11 @@ class AI:
         self.searchNotFinished = True
         
         # Build final Q from the results of the tree search
-        sim = Sim.Sim(state)
-        actions = self.getAllowedActions(sim.currentHP[0], sim.currentPP[0][sim.currentPokemon[0]], sim.currentPokemon[0], sim.forceSwitch[0])
         Q = np.array([])
-        for iAction in range(len(actions)):
-            Q = np.append(Q, strategyWins[0][str(actions[iAction])] / strategyTries[0][str(actions[iAction])])
+        for iAction in range(len(initialActions)):
+            Q = np.append(Q, strategyWins[0][str(initialActions[iAction])] / strategyTries[0][str(initialActions[iAction])])
         
-        iChoice = Q.tolist().index(max(Q))
-        choice = actions[iChoice]
-        return choice
+        return initialActions[random.choice([i for i, x in enumerate(Q) if x == max(Q)])]
     
     def getAllowedActions(self, chp, cpp, cp, fs):
         
